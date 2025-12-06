@@ -1,22 +1,17 @@
-export interface PlacedModule {
-  id: string;
-  key: string;
-  values: Record<string, string>;
-
-  // NEW for the AMPscript Country Switcher
-  parentId?: string;         // ID of the "ampscript_country" wrapper
-  country?: "US" | "CA" | "AU" | "Default";
-}
-
-export interface ModuleField {
-  id: string;
-  label: string;
-  type: "text" | "textarea" | "code" | "note";
-}
+export type Country = "US" | "CA" | "AU" | "Default";
 
 export interface ModuleDefinition {
   key: string;
   label: string;
-  fields: ModuleField[];
+  fields: { id: string; label: string; type: string }[];
   renderHtml: (values: Record<string, string>) => string;
+  thumb?: string;
+}
+
+export interface PlacedModule {
+  id: string;
+  key: string;
+  values: Record<string, string>;
+  parentId?: string;      // NULL for top-level
+  country?: Country;      // only used for nested modules inside switcher
 }
