@@ -92,42 +92,63 @@ export function useEmailBuilder() {
 
   /* UPDATE FIELDS + AUTO-ALIAS */
   function updateModuleValue(id: string, field: string, value: string) {
-    setModules((prev) =>
-      prev.map((m) => {
-        if (m.id !== id) return m;
+  setModules((prev) =>
+    prev.map((m) => {
+      if (m.id !== id) return m;
 
-        const updated = {
-          ...m,
-          values: { ...m.values, [field]: value },
-        };
+      const updated = {
+        ...m,
+        values: { ...m.values, [field]: value },
+      };
 
-        // Auto-alias generation
-        if (field.endsWith("_title")) {
-          const base = field.replace("_title", "");
+      // -------------------------------------------------------
+      // AUTO-CREATE ALIAS FOR ANY *_title FIELD
+      // Supports:
+      //  - image_title → link_alias
+      //  - hero_title → hero_link_alias
+      //  - etc.
+      // -------------------------------------------------------
+      if (field.endsWith("_title")) {
+        const base = field.replace("_title", ""); // "image"
 
-          const aliasField = Object.keys(updated.values).find(
-            (k) => k === `${base}_alias` || k === `${base}_link_alias`
-          );
+        // All possible alias names
+        const possibleAliases = [
+          `${base}_link_alias`, // image_link_alias
+          `${base}_alias`,      // image_alias
+          `${base}_btn_alias`,  // image_btn_alias
+          `link_alias`,         // <--- FULL WIDTH IMAGE MODULE USES THIS
+        ];
 
-          if (aliasField) {
-            const oldAlias = m.values[aliasField];
-            const newAlias =
-              value
-                .trim()
-                .toLowerCase()
-                .replace(/\s+/g, "_")
-                .replace(/[^a-z0-9_]/g, "") + "_alias";
+        let aliasField: string | null = null;
 
-            if (!oldAlias || oldAlias.includes("_alias")) {
-              updated.values[aliasField] = newAlias;
-            }
+        for (const key of possibleAliases) {
+          if (updated.values[key] !== undefined) {
+            aliasField = key;
+            break;
           }
         }
 
-        return updated;
-      })
-    );
-  }
+        if (aliasField) {
+          const oldAlias = m.values[aliasField];
+
+          const newAlias =
+            value
+              .trim()
+              .toLowerCase()
+              .replace(/\s+/g, "_")
+              .replace(/[^a-z0-9_]/g, "") + "_alias";
+
+          // Only auto-update if user hasn't manually modified alias
+          if (!oldAlias || oldAlias.endsWith("_alias")) {
+            updated.values[aliasField] = newAlias;
+          }
+        }
+      }
+
+      return updated;
+    })
+  );
+}
 
   /* EXPORT HTML */
   function buildExportHtml() {
