@@ -1,26 +1,47 @@
 import { useState } from "react";
-import { MODULES_BY_KEY } from "../data/moduleDefinitions";
-import type { PlacedModule } from "../types/Module";
+import { PlacedModule } from "../types/Module";
+import { MODULE_DEFINITIONS } from "../data/moduleDefinitions";
 
+type Country = "US" | "CA" | "AU" | "Default";
+
+const COUNTRY_ORDER: Country[] = ["US", "CA", "AU", "Default"];
 let idCounter = 1;
 const nextId = () => `mod_${idCounter++}`;
 
-// SFMC IMAGE ROOT
-const SFMC_BASE_IMAGE_URL =
-  "http://image.marketing.rodanandfields.com/lib/fe9113737767047572/m/1/";
+// -------------------------------------------
+// ALIAS MAP (module → title fields → alias fields)
+// -------------------------------------------
+const ALIAS_MAP: Record<string, Record<string, string[]>> = {
+  image_full_width: {
+    image_title: ["link_alias"],
+  },
+  image_grid_1x2: {
+    title_left: ["alias_left"],
+    title_right: ["alias_right"],
+  },
+  image_grid_1x2_cta: {
+    image1_title: ["image1_alias"],
+    image2_title: ["image2_alias"],
+    image1_btn_title: ["image1_btn_alias"],
+    image2_btn_title: ["image2_btn_alias"],
+  },
+  cta_button: {
+    title: ["alias"],
+  },
+};
 
-function resolveSfmcImageUrl(url: string): string {
-  if (!url) return "";
+// Build alias safely
+function buildAliasFromTitle(value: string): string {
+  const base =
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/['"]/g, "")
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "") || "link";
 
-  const trimmed = url.trim();
-
-  // Already a full URL? leave it
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-
-  // Otherwise treat as filename and prepend SFMC image root
-  return SFMC_BASE_IMAGE_URL + trimmed.replace(/^\/*/, "");
+  return `${base}_alias`;
 }
 
 export function useEmailBuilder() {
@@ -30,221 +51,149 @@ export function useEmailBuilder() {
   const [exportOpen, setExportOpen] = useState(false);
   const [exportHtml, setExportHtml] = useState("");
 
-  /* -----------------------------------------------------------
-     ADD TOP-LEVEL MODULE
-  ----------------------------------------------------------- */
-  function addModule(defKey: string, insertIndex?: number | null) {
-    const def = MODULES_BY_KEY[defKey];
-    if (!def) return;
+  const defByKey = Object.fromEntries(
+    MODULE_DEFINITIONS.map((m) => [m.key, m])
+  );
 
-    const values: Record<string, string> = {};
-    def.fields.forEach((f) => (values[f.id] = ""));
+  function makeEmptyValues(key: string) {
+    const def = defByKey[key];
+    const vals: Record<string, string> = {};
 
-    // top-level: no parentId, no country
-    const newMod: PlacedModule = {
+    def.fields.forEach((f) => (vals[f.id] = ""));
+    return vals;
+  }
+
+  // -------------------------------------------
+  // Add Top-Level
+  // -------------------------------------------
+  function addTopLevelModule(key: string, index?: number) {
+    const mod: PlacedModule = {
       id: nextId(),
-      key: defKey,
-      values,
+      key,
+      parentId: undefined,
+      country: undefined,
+      values: makeEmptyValues(key),
     };
 
     setModules((prev) => {
       const top = prev.filter((m) => !m.parentId);
       const nested = prev.filter((m) => m.parentId);
 
-      if (insertIndex === undefined || insertIndex === null) {
-        top.push(newMod);
-      } else {
-        const idx = Math.max(0, Math.min(insertIndex, top.length));
-        top.splice(idx, 0, newMod);
-      }
+      const i =
+        typeof index === "number" ? Math.min(Math.max(index, 0), top.length) : top.length;
+
+      top.splice(i, 0, mod);
 
       return [...top, ...nested];
     });
 
-    setSelectedId(newMod.id);
+    setSelectedId(mod.id);
   }
 
-  /* -----------------------------------------------------------
-     ADD NESTED MODULE (for a country bucket)
-  ----------------------------------------------------------- */
-  function addNestedModule(
-    defKey: string,
-    parentId: string,
-    country: "US" | "CA" | "AU" | "Default"
-  ) {
-    const def = MODULES_BY_KEY[defKey];
-    if (!def) return;
-
-    const values: Record<string, string> = {};
-    def.fields.forEach((f) => (values[f.id] = ""));
-
-    const newMod: PlacedModule = {
+  // -------------------------------------------
+  // Add Nested (Country switcher)
+  // -------------------------------------------
+  function addNestedModule(key: string, parentId: string, country: Country) {
+    const mod: PlacedModule = {
       id: nextId(),
-      key: defKey,
-      values,
+      key,
       parentId,
       country,
+      values: makeEmptyValues(key),
     };
 
-    setModules((prev) => [...prev, newMod]);
-    setSelectedId(newMod.id);
+    setModules((prev) => [...prev, mod]);
+    setSelectedId(mod.id);
   }
 
-  /* -----------------------------------------------------------
-     MOVE / REORDER TOP-LEVEL MODULES
-  ----------------------------------------------------------- */
-  function moveModuleTopLevel(id: string, newIndex: number) {
+  // -------------------------------------------
+  // Move Top-Level
+  // -------------------------------------------
+  function moveTopLevelModule(id: string, index: number) {
     setModules((prev) => {
       const top = prev.filter((m) => !m.parentId);
       const nested = prev.filter((m) => m.parentId);
 
-      const oldIndex = top.findIndex((m) => m.id === id);
-      if (oldIndex === -1) return prev;
+      const curIdx = top.findIndex((m) => m.id === id);
+      if (curIdx === -1) return prev;
 
-      const clamped = Math.max(0, Math.min(newIndex, top.length - 1));
+      const [item] = top.splice(curIdx, 1);
 
-      const [moving] = top.splice(oldIndex, 1);
-      top.splice(clamped, 0, moving);
+      const safeIndex = Math.max(0, Math.min(index, top.length));
+      top.splice(safeIndex, 0, item);
 
       return [...top, ...nested];
     });
   }
 
-  /* -----------------------------------------------------------
-     MOVE / REORDER NESTED MODULES (Option A behavior)
-     - Allows moving within same country bucket
-     - Allows moving between US/CA/AU/Default
-  ----------------------------------------------------------- */
+  // -------------------------------------------
+  // Move Nested
+  // -------------------------------------------
   function moveNestedModule(
     id: string,
-    targetParentId: string,
-    targetCountry: "US" | "CA" | "AU" | "Default",
-    targetIndex: number
+    parentId: string,
+    country: Country,
+    index: number
   ) {
     setModules((prev) => {
-      const top: PlacedModule[] = [];
-      const allNestedCandidate: PlacedModule[] = [];
+      const next = [...prev];
+      const curIdx = next.findIndex((m) => m.id === id);
+      if (curIdx === -1) return prev;
 
-      // Remove the moving module from wherever it is
-      let movingOriginal: PlacedModule | null = null;
-      for (const m of prev) {
-        if (m.id === id) {
-          movingOriginal = m;
-          continue;
-        }
-        if (!m.parentId) top.push(m);
-        else allNestedCandidate.push(m);
-      }
+      const [item] = next.splice(curIdx, 1);
+      item.parentId = parentId;
+      item.country = country;
 
-      if (!movingOriginal) return prev;
-
-      // Nested modules that are NOT in the target bucket
-      const nestedOthers = allNestedCandidate.filter(
-        (m) =>
-          !(
-            m.parentId === targetParentId &&
-            m.country === targetCountry
-          )
+      const siblings = next.filter(
+        (m) => m.parentId === parentId && m.country === country
       );
+      const siblingIds = siblings.map((s) => s.id);
 
-      // Current siblings in the target bucket
-      const siblings = allNestedCandidate.filter(
-        (m) =>
-          m.parentId === targetParentId && m.country === targetCountry
-      );
+      const insertBeforeId =
+        index >= siblingIds.length ? null : siblingIds[index];
 
-      const moving: PlacedModule = {
-        ...movingOriginal,
-        parentId: targetParentId,
-        country: targetCountry,
-      };
+      const insertIndex = insertBeforeId
+        ? next.findIndex((m) => m.id === insertBeforeId)
+        : next.length;
 
-      const clamped = Math.max(0, Math.min(targetIndex, siblings.length));
-      const newSiblings = [...siblings];
-      newSiblings.splice(clamped, 0, moving);
-
-      // New flat array:
-      //   - all top-level
-      //   - all nested from other buckets
-      //   - then siblings for this bucket in correct order
-      return [...top, ...nestedOthers, ...newSiblings];
+      next.splice(insertIndex, 0, item);
+      return next;
     });
   }
 
-  /* -----------------------------------------------------------
-     DELETE A MODULE + CHILDREN
-  ----------------------------------------------------------- */
+  // -------------------------------------------
+  // Remove module + nested children
+  // -------------------------------------------
   function removeModule(id: string) {
     setModules((prev) =>
       prev.filter((m) => m.id !== id && m.parentId !== id)
     );
-
-    if (selectedId === id) setSelectedId(null);
+    setSelectedId((curr) => (curr === id ? null : curr));
   }
 
-  /* -----------------------------------------------------------
-     UPDATE FIELD VALUES (alias + SFMC img)
-  ----------------------------------------------------------- */
+  // -------------------------------------------
+  // Update fields + auto-alias
+  // -------------------------------------------
   function updateModuleValue(id: string, field: string, value: string) {
     setModules((prev) =>
       prev.map((m) => {
         if (m.id !== id) return m;
 
-        const updated: PlacedModule = {
+        const updated = {
           ...m,
-          values: {
-            ...m.values,
-            [field]: value,
-          },
+          values: { ...m.values, [field]: value },
         };
 
-        // 1) AUTO-ALIAS FROM *_title
-        if (field.endsWith("_title")) {
-          const base = field.replace("_title", "");
+        const map = ALIAS_MAP[m.key];
+        if (map && map[field]) {
+          const newAlias = buildAliasFromTitle(value);
 
-          const possibleAliases = [
-            `${base}_link_alias`,
-            `${base}_alias`,
-            `${base}_btn_alias`,
-          ];
-
-          let aliasField: string | null = null;
-
-          for (const key of possibleAliases) {
-            if (updated.values[key] !== undefined) {
-              aliasField = key;
-              break;
-            }
-          }
-
-          if (aliasField) {
+          map[field].forEach((aliasField) => {
             const oldAlias = m.values[aliasField];
-
-            const newAlias =
-              value
-                .trim()
-                .toLowerCase()
-                .replace(/\s+/g, "_")
-                .replace(/[^a-z0-9_]/g, "") + "_alias";
-
-            // Only auto-update if user hasn't customized it
             if (!oldAlias || oldAlias.endsWith("_alias")) {
               updated.values[aliasField] = newAlias;
             }
-          }
-        }
-
-        // 2) AUTO-PREPEND SFMC IMAGE ROOT
-        const imageFields = new Set([
-          "image",
-          "image_left",
-          "image_right",
-          "image1_src",
-          "image2_src",
-        ]);
-
-        if (imageFields.has(field)) {
-          updated.values[field] = resolveSfmcImageUrl(value);
+          });
         }
 
         return updated;
@@ -252,66 +201,59 @@ export function useEmailBuilder() {
     );
   }
 
-  /* -----------------------------------------------------------
-   EXPORT HTML (CLEAN + HUMAN-FRIENDLY FORMATTING)
------------------------------------------------------------ */
-function buildExportHtml() {
+  // -------------------------------------------
+  // Build Export HTML
+  // -------------------------------------------
+  function buildExportHtml() {
+    const lines: string[] = [];
 
-  // Nicely formats each module block with spacing
-  function cleaned(block: string): string {
-    return (
-      "\n" +
-      block
-        .trim()
-        .replace(/\n{2,}/g, "\n") // collapse multiple blank lines
-        .replace(/\s+$/gm, "")   // remove trailing spaces
-      + "\n"
+    lines.push(
+      `<table width="100%" cellpadding="0" cellspacing="0" style="background:${bgColor};">`
     );
-  }
 
-  function renderNested(parentId: string, country: string) {
-    return modules
-      .filter((m) => m.parentId === parentId && m.country === country)
-      .map((m) => cleaned(MODULES_BY_KEY[m.key].renderHtml(m.values)))
-      .join("");
-  }
+    const top = modules.filter((m) => !m.parentId);
 
-  // Build clean top-level output
-  const bodyHtml = modules
-    .filter((m) => !m.parentId)
-    .map((m) => {
-      if (m.key !== "ampscript_country") {
-        return cleaned(MODULES_BY_KEY[m.key].renderHtml(m.values));
+    top.forEach((mod) => {
+      const def = defByKey[mod.key];
+      if (!def) return;
+
+      if (mod.key === "ampscript_country") {
+        let first = true;
+
+        COUNTRY_ORDER.forEach((country) => {
+          const kids = modules.filter(
+            (m) => m.parentId === mod.id && m.country === country
+          );
+
+          if (!kids.length) return;
+
+          if (country === "Default") {
+            lines.push(`%%[ ELSE ]%%`);
+          } else if (first) {
+            lines.push(`%%[ IF @Country == "${country}" THEN ]%%`);
+            first = false;
+          } else {
+            lines.push(`%%[ ELSEIF @Country == "${country}" THEN ]%%`);
+          }
+
+          kids.forEach((child) => {
+            const childDef = defByKey[child.key];
+            if (childDef) lines.push(childDef.renderHtml(child.values));
+          });
+        });
+
+        if (!first) lines.push(`%%[ ENDIF ]%%`);
+        return;
       }
 
-      return cleaned(`
-<!-- AMPscript Country Switcher -->
-%%[ IF @Country == "US" THEN ]%%
-${renderNested(m.id, "US")}
+      lines.push(def.renderHtml(mod.values));
+    });
 
-%%[ ELSEIF @Country == "CA" THEN ]%%
-${renderNested(m.id, "CA")}
+    lines.push(`</table>`);
 
-%%[ ELSEIF @Country == "AU" THEN ]%%
-${renderNested(m.id, "AU")}
-
-%%[ ELSE ]%%
-${renderNested(m.id, "Default")}
-%%[ ENDIF ]%%
-<!-- END Country Switcher -->
-`);
-    })
-    .join("");
-
-  // Wrap final clean table
-  setExportHtml(`
-<table width="100%" cellpadding="0" cellspacing="0" style="background:${bgColor};">
-${bodyHtml}
-</table>
-`);
-
-  setExportOpen(true);
-}
+    setExportHtml(lines.join("\n"));
+    setExportOpen(true);
+  }
 
   return {
     modules,
@@ -319,14 +261,12 @@ ${bodyHtml}
     bgColor,
     exportOpen,
     exportHtml,
-
-    setBgColor,
     setSelectedId,
+    setBgColor,
     setExportOpen,
-
-    addModule,
+    addTopLevelModule,
     addNestedModule,
-    moveModuleTopLevel,
+    moveTopLevelModule,
     moveNestedModule,
     removeModule,
     updateModuleValue,
