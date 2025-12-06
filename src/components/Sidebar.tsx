@@ -1,3 +1,4 @@
+// src/components/Sidebar.tsx
 import type { FC } from "react";
 import { MODULE_DEFINITIONS } from "../data/moduleDefinitions";
 
@@ -7,26 +8,26 @@ interface SidebarProps {
 
 const Sidebar: FC<SidebarProps> = ({ onAdd }) => {
   return (
-    <aside className="w-[260px] bg-white border-r border-slate-200 p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold text-slate-700 mb-4">
-        Module Library
+    <aside className="w-64 bg-white border-r border-slate-200 p-4 overflow-y-auto">
+      <h2 className="text-sm font-semibold text-slate-700 mb-3">
+        Content Blocks
       </h2>
 
-      <div className="space-y-3">
-        {MODULE_DEFINITIONS.map((def) => (
+      <div className="space-y-2">
+        {MODULE_DEFINITIONS.map((mod) => (
           <div
-            key={def.key}
+            key={mod.key}
             draggable
-            onDragStart={(e) => {
+            onDragStart={(e) =>
               e.dataTransfer.setData(
                 "application/json",
-                JSON.stringify({ type: "library-module", moduleKey: def.key })
-              );
-            }}
-            onClick={() => onAdd(def.key)}
-            className="px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg cursor-pointer hover:border-blue-500"
+                JSON.stringify({ type: "library-module", key: mod.key })
+              )
+            }
+            onClick={() => onAdd(mod.key)}
+            className="p-2 border rounded cursor-pointer bg-slate-50 hover:bg-slate-100 text-xs"
           >
-            <span className="text-sm font-medium">{def.label}</span>
+            {mod.label}
           </div>
         ))}
       </div>

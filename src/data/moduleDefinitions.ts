@@ -1,7 +1,9 @@
+// src/data/moduleDefinitions.ts
+import { ModuleDefinition } from "../types/Module";
+
 // ---------------------------------------------------------------------------
 // GLOBAL SFMC IMAGE RESOLVER (shared by all modules)
 // ---------------------------------------------------------------------------
-
 export const SFMC_BASE_IMAGE_URL =
   "http://image.marketing.rodanandfields.com/lib/fe9113737767047572/m/1/";
 
@@ -20,136 +22,283 @@ export function resolveSfmcImageUrl(url: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// MODULE DEFINITIONS
+// MODULE DEFINITIONS  (ordered for business)
+// 1. Full Width Image
+// 2. Body Copy
+// 3. 2-Col Image
+// 4. 2-Col Image + CTA
+// 5. CTA Button
+// 6. Disclaimer Copy
+// 7. AMPscript Block
+// 8. AMPscript Country Switcher
 // ---------------------------------------------------------------------------
-
-import { ModuleDefinition } from "../types/Module";
-
 export const MODULE_DEFINITIONS: ModuleDefinition[] = [
+  /* ============================================================
+     1) FULL WIDTH IMAGE
+  ============================================================ */
   {
     key: "image_full_width",
     label: "Full Width Image",
     fields: [
-      { id: "image", label: "Image", type: "text" },
+      { id: "image", label: "Image Filename or Full URL", type: "text" },
       { id: "image_title", label: "Image Title", type: "text" },
+
+      // Business: alias is linked to Title (image_title -> link_alias)
       { id: "link", label: "Link URL", type: "text" },
       { id: "link_alias", label: "Link Alias", type: "text" },
+
       { id: "alt", label: "Alt Text", type: "text" },
     ],
     renderHtml: (v) => `
+<!-- START ${v.image_title || ""} Image Full Width -->
 <tr>
-  <td align="center">
-    <a href="${v.link}" alias="${v.link_alias}" title="${v.image_title}">
-      <img src="${resolveSfmcImageUrl(v.image)}" alt="${v.alt}" width="640" />
+  <td style="padding:0;text-align:center;">
+    <a href="${v.link || ""}" title="${v.image_title || ""}" alias="${v.link_alias || ""}" target="_blank" style="text-decoration:none;">
+      <img src="${resolveSfmcImageUrl(v.image)}" alt="${v.alt || ""}" width="640" style="width:100%;height:auto;display:block;">
     </a>
   </td>
 </tr>
+<!-- END ${v.image_title || ""} Image Full Width -->
 `,
   },
 
+  /* ============================================================
+     2) BODY COPY
+  ============================================================ */
+  {
+    key: "body_copy",
+    label: "Body Copy",
+    fields: [{ id: "text", label: "Body Copy", type: "textarea" }],
+    renderHtml: (v) => `
+<!-- START Body Copy -->
+<tr>
+  <td style="padding:15px 40px;text-align:center;">
+    <p style="font-size:18px;color:#000;margin:0;font-family:Arial;line-height:28px;text-align:center;">
+      ${v.text || ""}
+    </p>
+  </td>
+</tr>
+<!-- END Body Copy -->
+`,
+  },
+
+  /* ============================================================
+     3) 2 COL IMAGE
+     Business note: Left & Right each have their own alias,
+     but alias values use "<normalized_title>_alias".
+  ============================================================ */
   {
     key: "image_grid_1x2",
     label: "2-Col Image",
     fields: [
-      { id: "image_left", label: "Left Image", type: "text" },
-      { id: "title_left", label: "Left Title", type: "text" },
-      { id: "alias_left", label: "Left Alias", type: "text" },
-      { id: "link_left", label: "Left URL", type: "text" },
-      { id: "alt_left", label: "Left Alt", type: "text" },
+      { id: "image_left", label: "Left Image Filename or URL", type: "text" },
+      { id: "title_left", label: "Left Image Title", type: "text" },
+      { id: "alias_left", label: "Left Link Alias", type: "text" },
+      { id: "link_left", label: "Left Link URL", type: "text" },
+      { id: "alt_left", label: "Left Alt Text", type: "text" },
 
-      { id: "image_right", label: "Right Image", type: "text" },
-      { id: "title_right", label: "Right Title", type: "text" },
-      { id: "alias_right", label: "Right Alias", type: "text" },
-      { id: "link_right", label: "Right URL", type: "text" },
-      { id: "alt_right", label: "Right Alt", type: "text" },
+      { id: "image_right", label: "Right Image Filename or URL", type: "text" },
+      { id: "title_right", label: "Right Image Title", type: "text" },
+      { id: "alias_right", label: "Right Link Alias", type: "text" },
+      { id: "link_right", label: "Right Link URL", type: "text" },
+      { id: "alt_right", label: "Right Alt Text", type: "text" },
     ],
     renderHtml: (v) => `
+<!-- START 2-Col-Img -->
 <tr>
-  <td align="center">
-    <table width="100%">
-      <tr>
-        <td>
-          <a href="${v.link_left}" alias="${v.alias_left}">
-            <img src="${resolveSfmcImageUrl(v.image_left)}" alt="${v.alt_left}" width="285" />
-          </a>
-        </td>
-        <td>
-          <a href="${v.link_right}" alias="${v.alias_right}">
-            <img src="${resolveSfmcImageUrl(v.image_right)}" alt="${v.alt_right}" width="285" />
-          </a>
-        </td>
-      </tr>
+  <td style="padding:0;text-align:center;">
+    <table role="presentation" width="100%">
+      <tr><td align="center" style="font-size:0;">
+
+        <!-- LEFT -->
+        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
+          <table width="100%" style="max-width:280px;">
+            <tr>
+              <td style="padding-top:24px;text-align:center;">
+                <a href="${v.link_left || ""}" alias="${v.alias_left || ""}" title="${v.title_left || ""}">
+                  <img src="${resolveSfmcImageUrl(v.image_left)}" alt="${v.alt_left || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+                </a>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- RIGHT -->
+        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
+          <table width="100%" style="max-width:280px;">
+            <tr>
+              <td style="padding-top:24px;text-align:center;">
+                <a href="${v.link_right || ""}" alias="${v.alias_right || ""}" title="${v.title_right || ""}">
+                  <img src="${resolveSfmcImageUrl(v.image_right)}" alt="${v.alt_right || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+                </a>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+      </td></tr>
     </table>
   </td>
 </tr>
+<!-- END 2-Col-Img -->
 `,
   },
 
+  /* ============================================================
+     4) 2 COL IMAGE + CTA
+     Business: all aliases are "<normalized_title>_alias"
+  ============================================================ */
   {
     key: "image_grid_1x2_cta",
     label: "2-Col Image + CTA",
     fields: [
-      { id: "image1_src", label: "Left Image", type: "text" },
-      { id: "image1_title", label: "Left Title", type: "text" },
-      { id: "image1_alias", label: "Left Alias", type: "text" },
-      { id: "image1_link", label: "Left URL", type: "text" },
-      { id: "image1_alt", label: "Left Alt", type: "text" },
+      { id: "image1_src", label: "Left Image Filename or URL", type: "text" },
+      { id: "image1_title", label: "Left Image Title", type: "text" },
+      { id: "image1_alias", label: "Left Link Alias", type: "text" },
+      { id: "image1_link", label: "Left Link URL", type: "text" },
+      { id: "image1_alt", label: "Left Alt Text", type: "text" },
 
       { id: "image1_btn_title", label: "Left Button Title", type: "text" },
       { id: "image1_btn_alias", label: "Left Button Alias", type: "text" },
       { id: "image1_btn_link", label: "Left Button URL", type: "text" },
 
-      { id: "image2_src", label: "Right Image", type: "text" },
-      { id: "image2_title", label: "Right Title", type: "text" },
-      { id: "image2_alias", label: "Right Alias", type: "text" },
-      { id: "image2_link", label: "Right URL", type: "text" },
-      { id: "image2_alt", label: "Right Alt", type: "text" },
+      { id: "image2_src", label: "Right Image Filename or URL", type: "text" },
+      { id: "image2_title", label: "Right Image Title", type: "text" },
+      { id: "image2_alias", label: "Right Link Alias", type: "text" },
+      { id: "image2_link", label: "Right Link URL", type: "text" },
+      { id: "image2_alt", label: "Right Alt Text", type: "text" },
 
       { id: "image2_btn_title", label: "Right Button Title", type: "text" },
       { id: "image2_btn_alias", label: "Right Button Alias", type: "text" },
       { id: "image2_btn_link", label: "Right Button URL", type: "text" },
     ],
-    renderHtml: () => "<!-- CTA GRID -->",
+    renderHtml: (v) => `
+<!-- START 1x2 Image Grid + CTA -->
+<tr>
+  <td style="padding:0;text-align:center;font-size:0;">
+    <table role="presentation" width="100%">
+      <tr><td>
+
+        <!-- LEFT -->
+        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
+          <table width="100%" style="max-width:300px;">
+            <tr><td style="padding-top:24px;text-align:center;">
+              <a href="${v.image1_link || ""}" alias="${v.image1_alias || ""}" title="${v.image1_title || ""}">
+                <img src="${resolveSfmcImageUrl(v.image1_src)}" alt="${v.image1_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+              </a>
+            </td></tr>
+            <tr><td style="text-align:center;padding:10px;">
+              <a href="${v.image1_btn_link || ""}" alias="${v.image1_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
+                ${v.image1_btn_title || ""}
+              </a>
+            </td></tr>
+          </table>
+        </div>
+
+        <!-- RIGHT -->
+        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
+          <table width="100%" style="max-width:300px;">
+            <tr><td style="padding-top:24px;text-align:center;">
+              <a href="${v.image2_link || ""}" alias="${v.image2_alias || ""}" title="${v.image2_title || ""}">
+                <img src="${resolveSfmcImageUrl(v.image2_src)}" alt="${v.image2_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+              </a>
+            </td></tr>
+            <tr><td style="text-align:center;padding:10px;">
+              <a href="${v.image2_btn_link || ""}" alias="${v.image2_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
+                ${v.image2_btn_title || ""}
+              </a>
+            </td></tr>
+          </table>
+        </div>
+
+      </td></tr>
+    </table>
+  </td>
+</tr>
+<!-- END 1x2 Image Grid + CTA -->
+`,
   },
 
+  /* ============================================================
+     5) CTA BUTTON
+  ============================================================ */
   {
     key: "cta_button",
-    label: "White Button",
+    label: "CTA Button",
     fields: [
-      { id: "title", label: "Title", type: "text" },
-      { id: "url", label: "URL", type: "text" },
-      { id: "alias", label: "Alias", type: "text" },
+      { id: "title", label: "Button Title", type: "text" },
+      { id: "url", label: "Button URL", type: "text" },
+      { id: "alias", label: "Button Alias", type: "text" },
     ],
     renderHtml: (v) => `
-<tr><td align="center">
-<a href="${v.url}" alias="${v.alias}"
-style="background:#fff;border:3px solid;padding:12px 18px;display:inline-block">
-${v.title}
-</a>
-</td></tr>`,
+<!-- START Button -->
+<tr>
+  <td style="text-align:center;padding:20px;">
+    <a href="${v.url || ""}" alias="${v.alias || ""}" style="font-family:Arial;font-size:18px;background:#fff;border:3px solid;padding:14px 25px;text-decoration:none;color:#000;display:inline-block;">
+      ${v.title || ""}
+    </a>
+  </td>
+</tr>
+<!-- END Button -->
+`,
   },
 
+  /* ============================================================
+     6) DISCLAIMER COPY
+  ============================================================ */
+  {
+    key: "disclaimer_copy",
+    label: "Disclaimer Copy",
+    fields: [{ id: "text", label: "Disclaimer Copy", type: "textarea" }],
+    renderHtml: (v) => `
+<!-- START Disclaimer Copy -->
+<tr>
+  <td style="padding:25px 40px;text-align:center;">
+    <p style="font-size:12px;color:#000;margin:0;font-family:Arial;line-height:18px;text-align:center;">
+      ${v.text || ""}
+    </p>
+  </td>
+</tr>
+<!-- END Disclaimer Copy -->
+`,
+  },
+
+  /* ============================================================
+     7) RAW AMPSCRIPT BLOCK
+  ============================================================ */
   {
     key: "ampscript_block",
     label: "AMPscript Block",
-    fields: [{ id: "code", label: "AMPscript", type: "code" }],
-    renderHtml: (v) => v.code,
+    fields: [
+      { id: "code", label: "AMPscript / Dynamic Block", type: "code" },
+    ],
+    renderHtml: (v) => `
+<!-- START AMPscript Block -->
+${v.code || ""}
+<!-- END AMPscript Block -->
+`,
   },
 
+  /* ============================================================
+     8) AMPSCRIPT COUNTRY SWITCHER WRAPPER
+  ============================================================ */
   {
     key: "ampscript_country",
     label: "AMPscript Country Switcher",
     fields: [
       {
         id: "note",
-        label: "Drag modules into US, CA, AU, Default buckets.",
+        label: "Drag content blocks into each country bucket.",
         type: "note",
       },
     ],
-    renderHtml: () => "",
+    renderHtml: () => `
+<!-- AMPscript Country Switcher (content is injected externally during export) -->
+`,
   },
 ];
 
+// Map for quick lookup
 export const MODULES_BY_KEY = Object.fromEntries(
   MODULE_DEFINITIONS.map((m) => [m.key, m])
 );
