@@ -11,14 +11,14 @@ function App() {
     exportOpen,
     exportHtml,
 
-    setSelectedId,
     setBgColor,
+    setSelectedId,
     setExportOpen,
 
     addModule,
     addNestedModule,
     moveModuleTopLevel,
-    /*moveNestedModule, REMOVED FOR DEPLOYMENT */
+    moveNestedModule,
     removeModule,
     updateModuleValue,
     buildExportHtml,
@@ -42,8 +42,12 @@ function App() {
         onAddNested={(key, parentId, country) =>
           addNestedModule(key, parentId, country)
         }
-        onReorderTopLevel={moveModuleTopLevel}
-        /*onReorderNested={moveNestedModule} REMOVED FOR DEPLOYMENT*/
+        onReorderTopLevel={(id, newIndex) =>
+          moveModuleTopLevel(id, newIndex)
+        }
+        onMoveNested={(id, parentId, country, newIndex) =>
+          moveNestedModule(id, parentId, country, newIndex)
+        }
       />
 
       {/* RIGHT: Inspector + Export */}
@@ -71,7 +75,6 @@ function App() {
         />
       </div>
 
-      {/* Export Modal */}
       {exportOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-6 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full h-[80vh] flex flex-col">
