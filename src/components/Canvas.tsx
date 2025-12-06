@@ -1,21 +1,18 @@
 import type { FC, DragEvent } from "react";
-import type { PlacedModule } from "../types/Module";
+import { PlacedModule, Country } from "../types/Module";
 import { MODULES_BY_KEY } from "../data/moduleDefinitions";
-
-type Country = "US" | "CA" | "AU" | "Default";
 
 interface CanvasProps {
   modules: PlacedModule[];
   selectedId: string | null;
+
   onSelect: (id: string | null) => void;
   onRemove: (id: string) => void;
 
-  onAddTopLevel: (defKey: string, insertIndex?: number | null) => void;
-  onAddNested: (defKey: string, parentId: string, country: Country) => void;
-
+  onAddTopLevel: (defKey: string, insertIndex?: number) => void;
   onReorderTopLevel: (id: string, newIndex: number) => void;
 
-  // NEW: move/reorder nested items within/between country buckets
+  onAddNested: (defKey: string, parentId: string, country: Country) => void;
   onMoveNested: (
     id: string,
     parentId: string,
@@ -32,8 +29,8 @@ const Canvas: FC<CanvasProps> = ({
   onSelect,
   onRemove,
   onAddTopLevel,
-  onAddNested,
   onReorderTopLevel,
+  onAddNested,
   onMoveNested,
 }) => {
   const topModules = modules.filter((m) => !m.parentId);
@@ -44,12 +41,13 @@ const Canvas: FC<CanvasProps> = ({
     );
   }
 
-  function handleTopLevelDrop(
-    e: DragEvent<HTMLDivElement>,
-    targetIndex: number | null
-  ) {
+  const allow = (e: DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  function handleTopLevelDrop(e: DragEvent<HTMLDivElement>, targetIndex: number) {
+    e.preventDefault();
 
     const raw = e.dataTransfer.getData("application/json");
     if (!raw) return;
@@ -61,38 +59,32 @@ const Canvas: FC<CanvasProps> = ({
       return;
     }
 
-    // From sidebar → new top-level module
-    if (data.type === "library-module" && data.moduleKey) {
-      onAddTopLevel(data.moduleKey, targetIndex ?? undefined);
+    // From sidebar
+    if (data.type === "library-module") {
+      onAddTopLevel(data.moduleKey, targetIndex);
       return;
     }
 
-    // Reorder existing top-level
+    // From top-level reorder
     if (data.type === "top-module" && data.id) {
-      const newIndex =
-        targetIndex === null ? topModules.length - 1 : targetIndex;
-      onReorderTopLevel(data.id, newIndex);
+      onReorderTopLevel(data.id, targetIndex);
     }
-  }
-
-  function allow(e: DragEvent) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
   }
 
   return (
     <main className="flex-1 bg-slate-100 p-4 overflow-auto">
       <div className="max-w-3xl mx-auto">
+
         <h2 className="text-sm font-semibold text-slate-700 mb-3">
           Builder Canvas
         </h2>
 
-        {/* EMPTY STATE */}
+        {/* EMPTY CANVAS */}
         {topModules.length === 0 && (
           <div
-            className="border border-dashed border-slate-300 rounded-lg bg-white/60 p-8 text-center text-sm text-slate-500"
             onDragOver={allow}
             onDrop={(e) => handleTopLevelDrop(e, 0)}
+            className="border border-dashed border-slate-300 rounded-lg bg-white/60 p-8 text-center text-sm text-slate-500"
           >
             Drag modules here to start
           </div>
@@ -101,11 +93,12 @@ const Canvas: FC<CanvasProps> = ({
         {/* MODULE LIST */}
         {topModules.length > 0 && (
           <div className="flex flex-col gap-3">
-            {/* TOP DROPZONE */}
+
+            {/* TOP DROP ZONE */}
             <div
-              className="h-6 border-2 border-dashed border-transparent rounded hover:border-blue-400 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center"
               onDragOver={allow}
               onDrop={(e) => handleTopLevelDrop(e, 0)}
+              className="h-6 border-2 border-dashed border-transparent rounded hover:border-blue-400 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center"
             >
               Drop here to insert at top
             </div>
@@ -113,13 +106,13 @@ const Canvas: FC<CanvasProps> = ({
             {topModules.map((mod, idx) => {
               const def = MODULES_BY_KEY[mod.key];
 
-              // =================================================
-              // SPECIAL: AMPSCRIPT COUNTRY SWITCHER
-              // =================================================
+              // ============================================================
+              // COUNTRY SWITCHER BLOCK
+              // ============================================================
               if (mod.key === "ampscript_country") {
                 return (
                   <div key={mod.id}>
-                    {/* Main wrapper card (draggable as top-level) */}
+                    {/* Switcher card (top-level draggable) */}
                     <div
                       draggable
                       onDragStart={(e) =>
@@ -129,7 +122,7 @@ const Canvas: FC<CanvasProps> = ({
                         )
                       }
                       className={`border rounded-lg bg-white p-4 cursor-move shadow-sm ${
-                        selectedId === mod.id
+                        mod.id === selectedId
                           ? "border-blue-500 shadow"
                           : "border-slate-300 hover:border-blue-400"
                       }`}
@@ -139,34 +132,31 @@ const Canvas: FC<CanvasProps> = ({
                         <span className="text-xs font-semibold text-slate-700">
                           AMPscript Country Switcher
                         </span>
+
+                        {/* delete entire switcher */}
                         <button
-                          className="px-2 py-1 text-xs border border-rose-300 bg-rose-50 text-rose-700 rounded"
                           onClick={(e) => {
                             e.stopPropagation();
                             onRemove(mod.id);
                           }}
+                          className="px-2 py-1 text-xs bg-rose-50 border border-rose-300 text-rose-700 rounded"
                         >
                           ✕
                         </button>
                       </div>
 
-                      {/* Country Buckets */}
+                      {/* COUNTRY BUCKETS */}
                       <div className="grid grid-cols-1 gap-3">
                         {COUNTRY_ORDER.map((country) => {
-                          const children = getChildren(
-                            mod.id,
-                            country as Country
-                          );
+                          const kids = getChildren(mod.id, country);
 
-                          const handleCountryDrop = (
+                          const handleDrop = (
                             e: DragEvent<HTMLDivElement>,
-                            targetIndex: number | null
+                            targetIndex: number
                           ) => {
                             e.preventDefault();
-                            e.stopPropagation();
 
-                            const raw =
-                              e.dataTransfer.getData("application/json");
+                            const raw = e.dataTransfer.getData("application/json");
                             if (!raw) return;
 
                             let data: any;
@@ -176,7 +166,7 @@ const Canvas: FC<CanvasProps> = ({
                               return;
                             }
 
-                            // From sidebar → new nested module
+                            // from sidebar
                             if (
                               data.type === "library-module" &&
                               data.moduleKey
@@ -184,22 +174,18 @@ const Canvas: FC<CanvasProps> = ({
                               onAddNested(
                                 data.moduleKey,
                                 mod.id,
-                                country as Country
+                                country
                               );
                               return;
                             }
 
-                            // Existing nested module → move/reorder
-                            if (data.type === "nested-module" && data.id) {
-                              const index =
-                                targetIndex === null
-                                  ? children.length
-                                  : targetIndex;
+                            // nested reorder
+                            if (data.type === "nested-module") {
                               onMoveNested(
                                 data.id,
                                 mod.id,
-                                country as Country,
-                                index
+                                country,
+                                targetIndex
                               );
                             }
                           };
@@ -207,83 +193,78 @@ const Canvas: FC<CanvasProps> = ({
                           return (
                             <div
                               key={country}
-                              className="border border-slate-300 rounded-lg bg-slate-50 p-3"
                               onDragOver={allow}
-                              onDrop={(e) =>
-                                handleCountryDrop(e, children.length)
-                              }
+                              onDrop={(e) => handleDrop(e, kids.length)}
+                              className="border border-slate-300 rounded-lg bg-slate-50 p-3"
                             >
                               <div className="text-xs font-semibold text-slate-700 mb-2">
                                 {country} Content
                               </div>
 
-                              {/* Top dropzone inside bucket */}
+                              {/* TOP DROPZONE */}
                               <div
-                                className="h-5 border-2 border-dashed border-transparent rounded hover:border-blue-300 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center mb-1"
                                 onDragOver={allow}
-                                onDrop={(e) => handleCountryDrop(e, 0)}
+                                onDrop={(e) => handleDrop(e, 0)}
+                                className="h-5 border-2 border-dashed border-transparent rounded hover:border-blue-300 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center mb-2"
                               >
-                                Drop here to insert at top of {country}
+                                Drop here to insert at top
                               </div>
 
+                              {/* CHILDREN */}
                               <div className="flex flex-col gap-2">
-  {children.map((child, cIdx) => {
-    const cdef = MODULES_BY_KEY[child.key];
+                                {kids.map((child, cIdx) => {
+                                  const cdef = MODULES_BY_KEY[child.key];
 
-    return (
-      <div key={child.id}>
-        {/* CHILD MODULE CARD */}
-        <div
-          draggable
-          onDragStart={(e) =>
-            e.dataTransfer.setData(
-              "application/json",
-              JSON.stringify({
-                type: "nested-module",
-                id: child.id,
-              })
-            )
-          }
-          className={`p-2 bg-white rounded border text-xs flex justify-between items-center cursor-move ${
-            selectedId === child.id
-              ? "border-blue-500 shadow-sm"
-              : "border-slate-300 hover:border-blue-400"
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(child.id);
-          }}
-        >
-          <span>{cdef.label}</span>
+                                  return (
+                                    <div key={child.id}>
+                                      <div
+                                        draggable
+                                        onDragStart={(e) =>
+                                          e.dataTransfer.setData(
+                                            "application/json",
+                                            JSON.stringify({
+                                              type: "nested-module",
+                                              id: child.id,
+                                            })
+                                          )
+                                        }
+                                        className={`p-2 bg-white rounded border text-xs flex justify-between items-center cursor-move ${
+                                          child.id === selectedId
+                                            ? "border-blue-500 shadow-sm"
+                                            : "border-slate-300 hover:border-blue-400"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onSelect(child.id);
+                                        }}
+                                      >
+                                        <span>{cdef.label}</span>
 
-          {/* DELETE BUTTON */}
-          <button
-            className="ml-2 px-1 py-[2px] text-[10px] border border-rose-300 bg-rose-50 text-rose-700 rounded"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(child.id);
-            }}
-          >
-            ✕
-          </button>
-        </div>
+                                        {/* DELETE CHILD */}
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            onRemove(child.id);
+                                          }}
+                                          className="text-rose-600 text-xs px-2 py-0.5 border border-rose-300 bg-rose-50 rounded"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
 
-        {/* DROPZONE BELOW EACH CHILD */}
-        <div
-          className="h-4 border-2 border-dashed border-transparent rounded hover:border-blue-300 hover:bg-blue-50 text-[9px] text-slate-400 flex items-center justify-center mt-1"
-          onDragOver={allow}
-          onDrop={(e) => handleCountryDrop(e, cIdx + 1)}
-        >
-          Drop here to insert below
-        </div>
-      </div>
-    );
-  })}
-</div>
-
-                              {/* Hint */}
-                              <div className="mt-2 text-center text-[11px] text-blue-600 opacity-80">
-                                Drag blocks from the left into {country}
+                                      {/* DROPZONE BELOW CHILD */}
+                                      <div
+                                        onDragOver={allow}
+                                        onDrop={(e) =>
+                                          handleDrop(e, cIdx + 1)
+                                        }
+                                        className="h-4 border-2 border-dashed border-transparent rounded hover:border-blue-300 hover:bg-blue-50 text-[9px] text-slate-400 flex items-center justify-center mt-1"
+                                      >
+                                        Drop here to insert below
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
@@ -291,11 +272,11 @@ const Canvas: FC<CanvasProps> = ({
                       </div>
                     </div>
 
-                    {/* DROPZONE AFTER SWITCHER CARD */}
+                    {/* DROP ZONE BELOW SWITCHER */}
                     <div
-                      className="h-6 border-2 border-dashed border-transparent rounded hover:border-blue-400 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center mt-1"
                       onDragOver={allow}
                       onDrop={(e) => handleTopLevelDrop(e, idx + 1)}
+                      className="h-6 border-2 border-dashed border-transparent rounded hover:border-blue-400 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center mt-1"
                     >
                       Drop here to insert below
                     </div>
@@ -303,9 +284,9 @@ const Canvas: FC<CanvasProps> = ({
                 );
               }
 
-              // =================================================
-              // NORMAL TOP-LEVEL MODULE
-              // =================================================
+              // ============================================================
+              // NORMAL MODULE
+              // ============================================================
               return (
                 <div key={mod.id}>
                   <div
@@ -317,7 +298,7 @@ const Canvas: FC<CanvasProps> = ({
                       )
                     }
                     className={`border rounded-lg bg-white p-3 cursor-move ${
-                      selectedId === mod.id
+                      mod.id === selectedId
                         ? "border-blue-500 shadow"
                         : "border-slate-300 hover:border-blue-400"
                     }`}
@@ -329,11 +310,11 @@ const Canvas: FC<CanvasProps> = ({
                       </span>
 
                       <button
-                        className="px-2 py-1 text-xs border border-rose-300 bg-rose-50 text-rose-700 rounded"
                         onClick={(e) => {
                           e.stopPropagation();
                           onRemove(mod.id);
                         }}
+                        className="px-2 py-1 text-xs border bg-rose-50 border-rose-300 text-rose-600 rounded"
                       >
                         ✕
                       </button>
@@ -344,11 +325,11 @@ const Canvas: FC<CanvasProps> = ({
                     </div>
                   </div>
 
-                  {/* DROPZONE AFTER */}
+                  {/* DROPZONE BELOW NORMAL MODULE */}
                   <div
-                    className="h-6 border-2 border-dashed border-transparent rounded hover:border-blue-400 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center"
                     onDragOver={allow}
                     onDrop={(e) => handleTopLevelDrop(e, idx + 1)}
+                    className="h-6 border-2 border-dashed border-transparent rounded hover:border-blue-400 hover:bg-blue-50 text-[10px] text-slate-400 flex items-center justify-center mt-1"
                   >
                     Drop here to insert below
                   </div>

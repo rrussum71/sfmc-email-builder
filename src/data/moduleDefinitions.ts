@@ -1,5 +1,28 @@
 import { ModuleDefinition } from "../types/Module";
 
+// ---------------------------------------------------------------------------
+// GLOBAL SFMC IMAGE RESOLVER (shared by all modules)
+// ---------------------------------------------------------------------------
+export const SFMC_BASE_IMAGE_URL =
+  "http://image.marketing.rodanandfields.com/lib/fe9113737767047572/m/1/";
+
+export function resolveSfmcImageUrl(url: string): string {
+  if (!url) return "";
+
+  const trimmed = url.trim();
+
+  // Already a full remote URL? Leave untouched.
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  // Otherwise: prepend SFMC CDN base
+  return SFMC_BASE_IMAGE_URL + trimmed.replace(/^\/*/, "");
+}
+
+// ---------------------------------------------------------------------------
+// MODULE DEFINITIONS
+// ---------------------------------------------------------------------------
 export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   /* ============================================================
      FULL WIDTH IMAGE
@@ -8,27 +31,31 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     key: "image_full_width",
     label: "Full Width Image",
     fields: [
-      { id: "image", label: "Image URL", type: "text" },
+      { id: "image", label: "Image Filename or Full URL", type: "text" },
       { id: "image_title", label: "Image Title", type: "text" },
 
-      // ❌ Removed: image_alias (NO LONGER VALID)
-      // Only link alias is allowed
-
+      // No image alias — only link alias matters in SFMC
       { id: "link", label: "Link URL", type: "text" },
-      { id: "link_alias", label: "Link Alias", type: "text" }, // auto-created from image_title
+      { id: "link_alias", label: "Link Alias", type: "text" },
+
       { id: "alt", label: "Alt Text", type: "text" },
     ],
-    renderHtml: (v) => `
+
+    renderHtml: (v) => {
+      const img = resolveSfmcImageUrl(v.image);
+
+      return `
 <!-- START ${v.image_title || ""} Image Full Width -->
 <tr>
   <td style="padding:0;text-align:center;">
     <a href="${v.link || ""}" title="${v.image_title || ""}" alias="${v.link_alias || ""}" target="_blank" style="text-decoration:none;">
-      <img src="${v.image || ""}" alt="${v.alt || ""}" width="640" style="width:100%;height:auto;display:block;">
+      <img src="${img}" alt="${v.alt || ""}" width="640" style="width:100%;height:auto;display:block;">
     </a>
   </td>
 </tr>
 <!-- END ${v.image_title || ""} Image Full Width -->
-`,
+`;
+    },
   },
 
   /* ============================================================
@@ -78,19 +105,24 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     key: "image_grid_1x2",
     label: "2-Col-Img",
     fields: [
-      { id: "image_left", label: "Left Image URL", type: "text" },
-      { id: "title_left", label: "Left Image Title", type: "text" },
+      { id: "image_left", label: "Left Image Filename or URL", type: "text" },
+      { id: "title_left", label: "Left Title", type: "text" },
+      { id: "alias_left", label: "Left Link Alias", type: "text" },
       { id: "link_left", label: "Left Link URL", type: "text" },
-      { id: "link_left_alias", label: "Left Link Alias", type: "text" },
       { id: "alt_left", label: "Left Alt Text", type: "text" },
 
-      { id: "image_right", label: "Right Image URL", type: "text" },
-      { id: "title_right", label: "Right Image Title", type: "text" },
+      { id: "image_right", label: "Right Image Filename or URL", type: "text" },
+      { id: "title_right", label: "Right Title", type: "text" },
+      { id: "alias_right", label: "Right Link Alias", type: "text" },
       { id: "link_right", label: "Right Link URL", type: "text" },
-      { id: "link_right_alias", label: "Right Link Alias", type: "text" },
       { id: "alt_right", label: "Right Alt Text", type: "text" },
     ],
-    renderHtml: (v) => `
+
+    renderHtml: (v) => {
+      const left = resolveSfmcImageUrl(v.image_left);
+      const right = resolveSfmcImageUrl(v.image_right);
+
+      return `
 <!-- START 2-Col-Img -->
 <tr>
   <td style="padding:0;text-align:center;">
@@ -102,8 +134,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
           <table width="100%" style="max-width:280px;">
             <tr>
               <td style="padding-top:24px;text-align:center;">
-                <a href="${v.link_left || ""}" alias="${v.link_left_alias || ""}" title="${v.title_left || ""}">
-                  <img src="${v.image_left || ""}" alt="${v.alt_left || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+                <a href="${v.link_left || ""}" alias="${v.alias_left || ""}" title="${v.title_left || ""}">
+                  <img src="${left}" alt="${v.alt_left || ""}" width="285" style="display:block;width:100%;max-width:285px;">
                 </a>
               </td>
             </tr>
@@ -115,8 +147,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
           <table width="100%" style="max-width:280px;">
             <tr>
               <td style="padding-top:24px;text-align:center;">
-                <a href="${v.link_right || ""}" alias="${v.link_right_alias || ""}" title="${v.title_right || ""}">
-                  <img src="${v.image_right || ""}" alt="${v.alt_right || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+                <a href="${v.link_right || ""}" alias="${v.alias_right || ""}" title="${v.title_right || ""}">
+                  <img src="${right}" alt="${v.alt_right || ""}" width="285" style="display:block;width:100%;max-width:285px;">
                 </a>
               </td>
             </tr>
@@ -128,7 +160,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   </td>
 </tr>
 <!-- END 2-Col-Img -->
-`,
+`;
+    },
   },
 
   /* ============================================================
@@ -138,27 +171,32 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     key: "image_grid_1x2_cta",
     label: "2-Col-Img-CTA",
     fields: [
-      // LEFT
-      { id: "image1_src", label: "Left Image URL", type: "text" },
-      { id: "image1_title", label: "Left Image Title", type: "text" },
-      { id: "image1_link", label: "Left Image Link URL", type: "text" },
-      { id: "image1_link_alias", label: "Left Image Link Alias", type: "text" },
+      { id: "image1_src", label: "Left Image Filename or URL", type: "text" },
+      { id: "image1_title", label: "Left Title", type: "text" },
+      { id: "image1_alias", label: "Left Link Alias", type: "text" },
+      { id: "image1_link", label: "Left Link URL", type: "text" },
       { id: "image1_alt", label: "Left Alt Text", type: "text" },
+
       { id: "image1_btn_title", label: "Left Button Title", type: "text" },
       { id: "image1_btn_alias", label: "Left Button Alias", type: "text" },
-      { id: "image1_btn_link", label: "Left Button URL", type: "text" },
+      { id: "image1_btn_link", label: "Left Button Link", type: "text" },
 
-      // RIGHT
-      { id: "image2_src", label: "Right Image URL", type: "text" },
-      { id: "image2_title", label: "Right Image Title", type: "text" },
-      { id: "image2_link", label: "Right Image Link URL", type: "text" },
-      { id: "image2_link_alias", label: "Right Image Link Alias", type: "text" },
+      { id: "image2_src", label: "Right Image Filename or URL", type: "text" },
+      { id: "image2_title", label: "Right Title", type: "text" },
+      { id: "image2_alias", label: "Right Link Alias", type: "text" },
+      { id: "image2_link", label: "Right Link URL", type: "text" },
       { id: "image2_alt", label: "Right Alt Text", type: "text" },
+
       { id: "image2_btn_title", label: "Right Button Title", type: "text" },
       { id: "image2_btn_alias", label: "Right Button Alias", type: "text" },
-      { id: "image2_btn_link", label: "Right Button URL", type: "text" },
+      { id: "image2_btn_link", label: "Right Button Link", type: "text" },
     ],
-    renderHtml: (v) => `
+
+    renderHtml: (v) => {
+      const left = resolveSfmcImageUrl(v.image1_src);
+      const right = resolveSfmcImageUrl(v.image2_src);
+
+      return `
 <!-- START 1x2 Image Grid + CTA -->
 <tr>
   <td style="padding:0;text-align:center;font-size:0;">
@@ -169,13 +207,12 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
         <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
           <table width="100%" style="max-width:300px;">
             <tr><td style="padding-top:24px;text-align:center;">
-              <a href="${v.image1_link || ""}" alias="${v.image1_link_alias || ""}" title="${v.image1_title || ""}">
-                <img src="${v.image1_src || ""}" alt="${v.image1_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+              <a href="${v.image1_link || ""}" alias="${v.image1_alias || ""}" title="${v.image1_title || ""}">
+                <img src="${left}" alt="${v.image1_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
               </a>
             </td></tr>
-
             <tr><td style="text-align:center;padding:10px;">
-              <a href="${v.image1_btn_link || ""}" alias="${v.image1_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;text-decoration:none;color:#000;">
+              <a href="${v.image1_btn_link || ""}" alias="${v.image1_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
                 ${v.image1_btn_title || ""}
               </a>
             </td></tr>
@@ -186,13 +223,12 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
         <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
           <table width="100%" style="max-width:300px;">
             <tr><td style="padding-top:24px;text-align:center;">
-              <a href="${v.image2_link || ""}" alias="${v.image2_link_alias || ""}" title="${v.image2_title || ""}">
-                <img src="${v.image2_src || ""}" alt="${v.image2_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
+              <a href="${v.image2_link || ""}" alias="${v.image2_alias || ""}" title="${v.image2_title || ""}">
+                <img src="${right}" alt="${v.image2_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
               </a>
             </td></tr>
-
             <tr><td style="text-align:center;padding:10px;">
-              <a href="${v.image2_btn_link || ""}" alias="${v.image2_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;text-decoration:none;color:#000;">
+              <a href="${v.image2_btn_link || ""}" alias="${v.image2_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
                 ${v.image2_btn_title || ""}
               </a>
             </td></tr>
@@ -204,7 +240,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   </td>
 </tr>
 <!-- END 1x2 Image Grid + CTA -->
-`,
+`;
+    },
   },
 
   /* ============================================================
@@ -218,6 +255,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
       { id: "url", label: "Button URL", type: "text" },
       { id: "alias", label: "Button Alias", type: "text" },
     ],
+
     renderHtml: (v) => `
 <!-- START Button -->
 <tr>
@@ -237,12 +275,18 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   {
     key: "ampscript_block",
     label: "AMPscript Block",
-    fields: [{ id: "code", label: "AMPscript / Dynamic Block", type: "code" }],
-    renderHtml: (v) => `${v.code || ""}`,
+    fields: [
+      { id: "code", label: "AMPscript / Dynamic Block", type: "code" },
+    ],
+    renderHtml: (v) => `
+<!-- START AMPscript Block -->
+${v.code || ""}
+<!-- END AMPscript Block -->
+`,
   },
 
   /* ============================================================
-     AMPSCRIPT COUNTRY SWITCHER WRAPPER
+     COUNTRY-SWITCHER WRAPPER
   ============================================================ */
   {
     key: "ampscript_country",
@@ -250,16 +294,17 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     fields: [
       {
         id: "note",
-        label: "This block wraps US/CA/AU/Default content.",
+        label: "Drag content blocks into each country bucket.",
         type: "note",
       },
     ],
     renderHtml: () => `
-%%[ /* SWITCHER CONTENT FILLED IN EXPORT */ ]%%
+<!-- AMPscript Country Switcher (content is injected externally during export) -->
 `,
   },
 ];
 
+// Map for quick lookup
 export const MODULES_BY_KEY = Object.fromEntries(
   MODULE_DEFINITIONS.map((m) => [m.key, m])
 );

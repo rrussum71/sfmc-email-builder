@@ -253,47 +253,65 @@ export function useEmailBuilder() {
   }
 
   /* -----------------------------------------------------------
-     EXPORT HTML
-  ----------------------------------------------------------- */
-  function buildExportHtml() {
-    function renderNested(parentId: string, country: string) {
-      return modules
-        .filter(
-          (m) => m.parentId === parentId && m.country === country
-        )
-        .map((m) => MODULES_BY_KEY[m.key].renderHtml(m.values))
-        .join("\n");
-    }
+   EXPORT HTML (CLEAN + HUMAN-FRIENDLY FORMATTING)
+----------------------------------------------------------- */
+function buildExportHtml() {
 
-    const html = modules
-      .filter((m) => !m.parentId)
-      .map((m) => {
-        if (m.key !== "ampscript_country") {
-          return MODULES_BY_KEY[m.key].renderHtml(m.values);
-        }
+  // Nicely formats each module block with spacing
+  function cleaned(block: string): string {
+    return (
+      "\n" +
+      block
+        .trim()
+        .replace(/\n{2,}/g, "\n") // collapse multiple blank lines
+        .replace(/\s+$/gm, "")   // remove trailing spaces
+      + "\n"
+    );
+  }
 
-        return `
+  function renderNested(parentId: string, country: string) {
+    return modules
+      .filter((m) => m.parentId === parentId && m.country === country)
+      .map((m) => cleaned(MODULES_BY_KEY[m.key].renderHtml(m.values)))
+      .join("");
+  }
+
+  // Build clean top-level output
+  const bodyHtml = modules
+    .filter((m) => !m.parentId)
+    .map((m) => {
+      if (m.key !== "ampscript_country") {
+        return cleaned(MODULES_BY_KEY[m.key].renderHtml(m.values));
+      }
+
+      return cleaned(`
+<!-- AMPscript Country Switcher -->
 %%[ IF @Country == "US" THEN ]%%
 ${renderNested(m.id, "US")}
+
 %%[ ELSEIF @Country == "CA" THEN ]%%
 ${renderNested(m.id, "CA")}
+
 %%[ ELSEIF @Country == "AU" THEN ]%%
 ${renderNested(m.id, "AU")}
+
 %%[ ELSE ]%%
 ${renderNested(m.id, "Default")}
 %%[ ENDIF ]%%
-`;
-      })
-      .join("\n");
+<!-- END Country Switcher -->
+`);
+    })
+    .join("");
 
-    setExportHtml(
-      `<table width="100%" cellpadding="0" cellspacing="0" style="background:${bgColor};">
-${html}
-</table>`
-    );
+  // Wrap final clean table
+  setExportHtml(`
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${bgColor};">
+${bodyHtml}
+</table>
+`);
 
-    setExportOpen(true);
-  }
+  setExportOpen(true);
+}
 
   return {
     modules,
