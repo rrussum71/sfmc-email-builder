@@ -135,7 +135,7 @@ Error generating stack: `+i.message+`
                         <tr>
                           <td style="padding:10px;text-align:center;">
                             <p style="color:#499796;margin:0;font-family:Arial;">
-                              <a href="${e.image1_btn_link||""}" alias="${e.image1_btn_alias||""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;"><!--[if mso]><i style="letter-spacing: 25px;mso-font-width:-100%;mso-text-raise:20pt">&nbsp;</i><![endif]-->
+                              <a href="${e.image1_btn_link||""}" alias="${e.image1_btn_alias||""}" style="font-family:Arial;font-size:18px;background:#FFFFFF;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;"><!--[if mso]><i style="letter-spacing: 25px;mso-font-width:-100%;mso-text-raise:20pt">&nbsp;</i><![endif]-->
                                 <span style="mso-text-raise:10pt;font-weight:normal;color:#000000;">
                                   ${e.image1_btn_title||""}
                                 </span><!--[if mso]><i style="letter-spacing: 25px;mso-font-width:-100%">&nbsp;</i><![endif]--></a>
@@ -175,7 +175,7 @@ Error generating stack: `+i.message+`
                         <tr>
                           <td style="padding:10px;text-align:center;">
                             <p style="color:#499796;margin:0;font-family:Arial;">
-                               <a href="${e.image2_btn_link||""}" alias="${e.image2_btn_alias||""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
+                               <a href="${e.image2_btn_link||""}" alias="${e.image2_btn_alias||""}" style="font-family:Arial;font-size:18px;background:#FFFFFF;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
                                 <!--[if mso]><i style="letter-spacing: 25px;mso-font-width:-100%;mso-text-raise:20pt">&nbsp;</i><![endif]-->
                                 <span style="mso-text-raise:10pt;font-weight:normal;color:#000000;">
                                 ${e.image2_btn_title||""}</span><!--[if mso]><i style="letter-spacing: 25px;mso-font-width:-100%">&nbsp;</i><![endif]--></a>
