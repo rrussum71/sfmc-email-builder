@@ -103,44 +103,66 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
       { id: "link_right", label: "Right Link URL", type: "text" },
       { id: "alt_right", label: "Right Alt Text", type: "text" },
     ],
-    renderHtml: (v) => `
-<!-- START 2-Col-Img -->
+   renderHtml: (v) => `
+<!-- START 2-Col Image -->
 <tr>
-  <td style="padding:0;text-align:center;">
-    <table role="presentation" width="100%">
-      <tr><td align="center" style="font-size:0;">
+  <td align="center" style="padding:0;">
+
+    <!--[if mso]>
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0">
+      <tr>
 
         <!-- LEFT -->
-        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
-          <table width="100%" style="max-width:280px;">
-            <tr>
-              <td style="padding-top:24px;text-align:center;">
-                <a href="${v.link_left || ""}" alias="${v.alias_left || ""}" title="${v.title_left || ""}">
-                  <img src="${resolveSfmcImageUrl(v.image_left)}" alt="${v.alt_left || ""}" width="285" style="display:block;width:100%;max-width:285px;">
-                </a>
-              </td>
-            </tr>
-          </table>
-        </div>
+        <td width="300" valign="top" style="padding:24px 0 0 0; text-align:center;">
+          <a href="${v.link_left || ""}" alias="${v.alias_left || ""}" title="${v.title_left || ""}">
+            <img src="${resolveSfmcImageUrl(v.image_left)}"
+                 alt="${v.alt_left || ""}"
+                 width="300"
+                 style="display:block; border:0; outline:none; text-decoration:none;">
+          </a>
+        </td>
 
         <!-- RIGHT -->
-        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
-          <table width="100%" style="max-width:280px;">
-            <tr>
-              <td style="padding-top:24px;text-align:center;">
-                <a href="${v.link_right || ""}" alias="${v.alias_right || ""}" title="${v.title_right || ""}">
-                  <img src="${resolveSfmcImageUrl(v.image_right)}" alt="${v.alt_right || ""}" width="285" style="display:block;width:100%;max-width:285px;">
-                </a>
-              </td>
-            </tr>
-          </table>
-        </div>
+        <td width="300" valign="top" style="padding:24px 0 0 0; text-align:center;">
+          <a href="${v.link_right || ""}" alias="${v.alias_right || ""}" title="${v.title_right || ""}">
+            <img src="${resolveSfmcImageUrl(v.image_right)}"
+                 alt="${v.alt_right || ""}"
+                 width="300"
+                 style="display:block; border:0; outline:none; text-decoration:none;">
+          </a>
+        </td>
 
-      </td></tr>
+      </tr>
     </table>
+    <![endif]-->
+
+    <!--[if !mso]><!-->
+    <div style="text-align:center; font-size:0;">
+
+      <!-- LEFT -->
+      <div style="display:inline-block; vertical-align:top; width:100%; max-width:300px;">
+        <a href="${v.link_left || ""}" alias="${v.alias_left || ""}" title="${v.title_left || ""}">
+          <img src="${resolveSfmcImageUrl(v.image_left)}"
+               alt="${v.alt_left || ""}"
+               style="width:100%; height:auto; display:block; padding-top:24px;">
+        </a>
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display:inline-block; vertical-align:top; width:100%; max-width:300px;">
+        <a href="${v.link_right || ""}" alias="${v.alias_right || ""}" title="${v.title_right || ""}">
+          <img src="${resolveSfmcImageUrl(v.image_right)}"
+               alt="${v.alt_right || ""}"
+               style="width:100%; height:auto; display:block; padding-top:24px;">
+        </a>
+      </div>
+
+    </div>
+    <!--<![endif]-->
+
   </td>
 </tr>
-<!-- END 2-Col-Img -->
+<!-- END 2-Col Image -->
 `,
   },
 
@@ -173,50 +195,99 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
       { id: "image2_btn_link", label: "Right Button URL", type: "text" },
     ],
     renderHtml: (v) => `
-<!-- START 1x2 Image Grid + CTA -->
+<!-- START 2-Col Image + CTA -->
 <tr>
-  <td style="padding:0;text-align:center;font-size:0;">
-    <table role="presentation" width="100%">
-      <tr><td>
+  <td align="center" style="padding:0;">
+
+    <!--[if mso]>
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0">
+      <tr>
 
         <!-- LEFT -->
-        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
-          <table width="100%" style="max-width:300px;">
-            <tr><td style="padding-top:24px;text-align:center;">
-              <a href="${v.image1_link || ""}" alias="${v.image1_alias || ""}" title="${v.image1_title || ""}">
-                <img src="${resolveSfmcImageUrl(v.image1_src)}" alt="${v.image1_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
-              </a>
-            </td></tr>
-            <tr><td style="text-align:center;padding:10px;">
-              <a href="${v.image1_btn_link || ""}" alias="${v.image1_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
-                ${v.image1_btn_title || ""}
-              </a>
-            </td></tr>
-          </table>
-        </div>
+        <td width="300" valign="top" style="padding:24px 0 0 0; text-align:center;">
+          <a href="${v.image1_link || ""}" alias="${v.image1_alias || ""}" title="${v.image1_title || ""}">
+            <img src="${resolveSfmcImageUrl(v.image1_src)}"
+                 alt="${v.image1_alt || ""}"
+                 width="300"
+                 style="display:block;">
+          </a>
+          <div style="padding:12px 0;">
+            <a href="${v.image1_btn_link || ""}" alias="${v.image1_btn_alias || ""}"
+               style="font-family:Arial; font-size:18px; background:#F5F4F2;
+                      border:3px solid #000; padding:14px 25px;
+                      color:#000; text-decoration:none; display:inline-block;">
+              ${v.image1_btn_title || ""}
+            </a>
+          </div>
+        </td>
 
         <!-- RIGHT -->
-        <div style="display:inline-block;max-width:50%;min-width:280px;width:100%;">
-          <table width="100%" style="max-width:300px;">
-            <tr><td style="padding-top:24px;text-align:center;">
-              <a href="${v.image2_link || ""}" alias="${v.image2_alias || ""}" title="${v.image2_title || ""}">
-                <img src="${resolveSfmcImageUrl(v.image2_src)}" alt="${v.image2_alt || ""}" width="285" style="display:block;width:100%;max-width:285px;">
-              </a>
-            </td></tr>
-            <tr><td style="text-align:center;padding:10px;">
-              <a href="${v.image2_btn_link || ""}" alias="${v.image2_btn_alias || ""}" style="font-family:Arial;font-size:18px;background:#F5F4F2;border:3px solid #000;padding:14px 25px;display:inline-block;text-decoration:none;color:#000;">
-                ${v.image2_btn_title || ""}
-              </a>
-            </td></tr>
-          </table>
-        </div>
+        <td width="300" valign="top" style="padding:24px 0 0 0; text-align:center;">
+          <a href="${v.image2_link || ""}" alias="${v.image2_alias || ""}" title="${v.image2_title || ""}">
+            <img src="${resolveSfmcImageUrl(v.image2_src)}"
+                 alt="${v.image2_alt || ""}"
+                 width="300"
+                 style="display:block;">
+          </a>
+          <div style="padding:12px 0;">
+            <a href="${v.image2_btn_link || ""}" alias="${v.image2_btn_alias || ""}"
+               style="font-family:Arial; font-size:18px; background:#F5F4F2;
+                      border:3px solid #000; padding:14px 25px;
+                      color:#000; text-decoration:none; display:inline-block;">
+              ${v.image2_btn_title || ""}
+            </a>
+          </div>
+        </td>
 
-      </td></tr>
+      </tr>
     </table>
+    <![endif]-->
+
+    <!--[if !mso]><!-->
+    <div style="font-size:0; text-align:center;">
+
+      <!-- LEFT -->
+      <div style="display:inline-block; width:100%; max-width:300px; vertical-align:top;">
+        <a href="${v.image1_link || ""}" alias="${v.image1_alias || ""}">
+          <img src="${resolveSfmcImageUrl(v.image1_src)}"
+               alt="${v.image1_alt || ""}"
+               style="width:100%; height:auto; display:block; padding-top:24px;">
+        </a>
+        <div style="padding:12px 0;">
+          <a href="${v.image1_btn_link || ""}" alias="${v.image1_btn_alias || ""}"
+             style="font-family:Arial; font-size:18px; background:#F5F4F2;
+                    border:3px solid #000; padding:14px 25px;
+                    color:#000; text-decoration:none; display:inline-block;">
+            ${v.image1_btn_title || ""}
+          </a>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display:inline-block; width:100%; max-width:300px; vertical-align:top;">
+        <a href="${v.image2_link || ""}" alias="${v.image2_alias || ""}">
+          <img src="${resolveSfmcImageUrl(v.image2_src)}"
+               alt="${v.image2_alt || ""}"
+               style="width:100%; height:auto; display:block; padding-top:24px;">
+        </a>
+        <div style="padding:12px 0;">
+          <a href="${v.image2_btn_link || ""}" alias="${v.image2_btn_alias || ""}"
+             style="font-family:Arial; font-size:18px; background:#F5F4F2;
+                    border:3px solid #000; padding:14px 25px;
+                    color:#000; text-decoration:none; display:inline-block;">
+            ${v.image2_btn_title || ""}
+          </a>
+        </div>
+      </div>
+
+    </div>
+    <!--<![endif]-->
+
   </td>
 </tr>
-<!-- END 1x2 Image Grid + CTA -->
+<!-- END 2-Col Image + CTA -->
 `,
+
   },
 
   /* ============================================================
