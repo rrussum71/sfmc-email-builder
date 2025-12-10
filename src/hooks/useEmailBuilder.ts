@@ -228,9 +228,19 @@ export function useEmailBuilder() {
         let first = true;
 
         COUNTRY_ORDER.forEach((country) => {
-          const kids = modules.filter(
-            (m) => m.parentId === mod.id && m.country === country
-          );
+          let kids;
+
+            if (country === "Default") {
+              // Default mirrors US
+              kids = modules.filter(
+                (m) => m.parentId === mod.id && m.country === "US"
+              );
+            } else {
+              // All other countries behave normally
+              kids = modules.filter(
+                (m) => m.parentId === mod.id && m.country === country
+              );
+            }
 
           if (!kids.length) return;
 
