@@ -229,7 +229,6 @@ export function useEmailBuilder() {
 
         COUNTRY_ORDER.forEach((country) => {
           let kids;
-
             if (country === "Default") {
               // Default mirrors US
               kids = modules.filter(

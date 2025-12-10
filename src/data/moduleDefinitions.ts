@@ -104,77 +104,62 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
       { id: "alt_right", label: "Right Alt Text", type: "text" },
     ],
    renderHtml: (v) => `
-<!-- START 1x2 Image Grid -->
-<tr> 
-<td style="padding:0px;text-align:center;">
-<!--[if (gte mso 9)|(IE)]>
-<table align="center" border="0" cellspacing="0" cellpadding="0" width="640" style="width="100%">
+<!-- START 1x2 Image Column -->
+  <!--[if (gte mso 9)|(IE)]>
+<table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
 <tr>
-<td align="center" valign="top" width="640">
+<td align="center" valign="top" width="600">
 <![endif]-->
-<table  role="presentation" width="100%"style="">
-  <tr>
-    <td align="center" valign="top" style="font-size:0; padding-bottom: 0px;">
-      <!--[if (gte mso 9)|(IE)]>
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+    <tr>
+      <td align="center" valign="top" style="font-size:0; padding-bottom: 0px;">
+        <!--[if (gte mso 9)|(IE)]>
 <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
 <tr>
 <td align="left" valign="top" width="280">
 <![endif]-->
-      <div style="display:inline-block; max-width:50%; min-width:280px; vertical-align:top; width:100%;" class="mobile-wrapper">
-        <table align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:300px;" class="max-width">
-          <tr>
-            <td align="center" valign="top" style="font-family: Arial; padding-top:24px;">
-               <a href="${v.link_left || ""}" alias="${v.alias_left || ""}" title="${v.title_left || ""}">
-            <img src="${resolveSfmcImageUrl(v.image_left)}"
-                     alt="${v.alt_left || ""}" 
-                     width="300" 
-                     height="auto" 
-                     border="0" 
-                     style="display: block; border: 0px; font-family: Arial; font-size: 18px;" 
-                     class="img-max"/>
-              </a>
-            </td>
-          </tr>
-        </table>
-      </div>
-      <!--[if (gte mso 9)|(IE)]>
+        <div style="display:inline-block; max-width:50%; min-width:280px; vertical-align:top; width:100%;" class="mobile-wrapper">
+          <table align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:280px;" class="max-width">
+            <tr>
+              <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                <a href="${v.link_left || ""}" alias="${v.alias_left || ""}" title="${v.title_left || ""}">
+                  <img src="${resolveSfmcImageUrl(v.image_left)}"
+                       alt="${v.alt_left || ""}" width="280" height="auto" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="img-max"/>
+                </a>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <!--[if (gte mso 9)|(IE)]>
 </td>
 <td width="20" style="font-size: 1px;">&nbsp;</td>
 <td align="right" valign="top" width="280">
 <![endif]-->
-      <div style="display:inline-block; max-width:50%; min-width:280px; vertical-align:top; width:100%;" class="mobile-wrapper">
-        <table align="right" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:300px;" class="max-width">
-          <tr>
-            <td align="center" valign="top" style="font-family: Arial; padding-top: 24px;">
-               <a href="${v.link_right || ""}" alias="${v.alias_right || ""}" title="${v.title_right || ""}">
-          <img src="${resolveSfmcImageUrl(v.image_right)}"
-                    alt="${v.alt_right || ""}" 
-                     width="300" 
-                     height="auto" 
-                     border="0" 
-                     style="display: block; border: 0px; font-family: Arial; font-size: 18px;" 
-                     class="img-max"/>
-              </a>
-            </td>
-          </tr>
-        </table>
-      </div>
-      <!--[if (gte mso 9)|(IE)]>
+        <div style="display:inline-block; max-width:50%; min-width:280px; vertical-align:top; width:100%;" class="mobile-wrapper">
+          <table align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:280px; float: right;" class="max-width">
+            <tr>
+              <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                <a href="${v.link_right || ""}" alias="${v.alias_right || ""}" title="${v.title_right || ""}">
+                  <img src="${resolveSfmcImageUrl(v.image_right)}"
+                       alt="${v.alt_right || ""}" width="280" height="auto" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="img-max"/>
+                </a>
+              </td>
+          </table>
+        </div>
+        <!--[if (gte mso 9)|(IE)]>
 </td>
 </tr>
 </table>
 <![endif]-->
-    </td>
-  </tr>
-</table>
-<!--[if (gte mso 9)|(IE)]>
+      </td>
+    </tr>
+  </table>
+  <!--[if (gte mso 9)|(IE)]>
 </td>
 </tr>
 </table>
 <![endif]-->
-  </td>
-</tr>
-<!-- END 1x2 Image Grid -->
+  <!-- END 1x2 Image Column -->
 `,
   },
 
