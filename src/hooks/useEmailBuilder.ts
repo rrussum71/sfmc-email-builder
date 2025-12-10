@@ -49,13 +49,9 @@ export function useEmailBuilder() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bgColor, setBgColor] = useState("#FFFFFF");
 
-  // ============================
-  // EXPORT + PREVIEW STATES
-  // ============================
+  // Export + Preview state
   const [exportOpen, setExportOpen] = useState(false);
   const [exportHtml, setExportHtml] = useState("");
-
-  // ⭐ NEW: Preview modal state
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const defByKey = Object.fromEntries(
@@ -133,7 +129,7 @@ export function useEmailBuilder() {
   }
 
   // -------------------------------------------
-  // Move Nested
+  // Move Nested (inside ACS buckets)
   // -------------------------------------------
   function moveNestedModule(
     id: string,
@@ -143,13 +139,18 @@ export function useEmailBuilder() {
   ) {
     setModules((prev) => {
       const next = [...prev];
+
       const curIdx = next.findIndex((m) => m.id === id);
       if (curIdx === -1) return prev;
 
+      // Remove the item from its current position
       const [item] = next.splice(curIdx, 1);
+
+      // Update to new parent/country
       item.parentId = parentId;
       item.country = country;
 
+      // Recompute siblings in the target bucket (excluding this item)
       const siblings = next.filter(
         (m) => m.parentId === parentId && m.country === country
       );
@@ -163,6 +164,7 @@ export function useEmailBuilder() {
         : next.length;
 
       next.splice(insertIndex, 0, item);
+
       return next;
     });
   }
@@ -268,13 +270,16 @@ export function useEmailBuilder() {
     modules,
     selectedId,
     bgColor,
+
     exportOpen,
     exportHtml,
-    previewOpen,       // ⭐ NEW
+    previewOpen,
+
     setSelectedId,
     setBgColor,
     setExportOpen,
-    setPreviewOpen,    // ⭐ NEW
+    setPreviewOpen,
+
     addTopLevelModule,
     addNestedModule,
     moveTopLevelModule,
