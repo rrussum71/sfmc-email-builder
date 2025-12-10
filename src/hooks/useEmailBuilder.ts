@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { PlacedModule } from "../types/Module";
+import type { PlacedModule, Country } from "../types/Module";
 import { MODULE_DEFINITIONS } from "../data/moduleDefinitions";
 
-type Country = "US" | "CA" | "AU" | "Default";
-
 const COUNTRY_ORDER: Country[] = ["US", "CA", "AU", "Default"];
+
 let idCounter = 1;
 const nextId = () => `mod_${idCounter++}`;
 

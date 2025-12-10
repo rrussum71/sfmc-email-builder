@@ -1,6 +1,7 @@
 // src/components/Canvas.tsx
+
 import type { FC, DragEvent } from "react";
-import { PlacedModule } from "../types/Module";
+import type { PlacedModule, Country } from "../types/Module";
 import { MODULES_BY_KEY } from "../data/moduleDefinitions";
 
 interface CanvasProps {
@@ -8,23 +9,20 @@ interface CanvasProps {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onRemove: (id: string) => void;
+
   onAddTopLevel: (key: string, index?: number) => void;
-  onAddNested: (key: string, parentId: string, country: string) => void;
+  onAddNested: (key: string, parentId: string, country: Country) => void;
+
   onReorderTopLevel: (id: string, index: number) => void;
   onReorderNested: (
     id: string,
     parentId: string,
-    country: string,
+    country: Country,
     index: number
   ) => void;
 }
 
-const COUNTRIES: Array<"US" | "CA" | "AU" | "Default"> = [
-  "US",
-  "CA",
-  "AU",
-  "Default",
-];
+const COUNTRIES: Country[] = ["US", "CA", "AU", "Default"];
 
 export const Canvas: FC<CanvasProps> = ({
   modules,
@@ -69,7 +67,7 @@ export const Canvas: FC<CanvasProps> = ({
   const handleNestedDrop = (
     e: DragEvent<HTMLDivElement>,
     parentId: string,
-    country: string,
+    country: Country,
     index: number
   ) => {
     allow(e);
@@ -93,7 +91,7 @@ export const Canvas: FC<CanvasProps> = ({
   // -----------------------
   // RENDER BUCKET
   // -----------------------
-  const renderBucket = (parentId: string, country: string) => {
+  const renderBucket = (parentId: string, country: Country) => {
     const children = modules.filter(
       (m) => m.parentId === parentId && m.country === country
     );
@@ -125,8 +123,8 @@ export const Canvas: FC<CanvasProps> = ({
                     JSON.stringify({
                       type: "nested-module",
                       id: child.id,
-                      parentId: child.parentId,
-                      country: child.country,
+                      parentId: child.parentId!,
+                      country: child.country!,
                     })
                   );
                 }}
@@ -153,11 +151,13 @@ export const Canvas: FC<CanvasProps> = ({
                 </button>
               </div>
 
-              {/* Drop zone below item */}
+              {/* Drop zone below */}
               <div
                 className="h-5 border border-dashed border-slate-300 text-[10px] flex items-center justify-center"
                 onDragOver={allow}
-                onDrop={(e) => handleNestedDrop(e, parentId, country, idx + 1)}
+                onDrop={(e) =>
+                  handleNestedDrop(e, parentId, country, idx + 1)
+                }
               >
                 Drop here to insert below
               </div>
@@ -177,7 +177,7 @@ export const Canvas: FC<CanvasProps> = ({
     <main className="flex-1 bg-slate-100 p-4 overflow-auto">
       <div className="max-w-3xl mx-auto pb-20">
 
-        {/* Initial top drop zone */}
+        {/* Top drop zone */}
         <div
           className="h-10 border border-dashed border-slate-400 text-xs flex items-center justify-center mb-3"
           onDragOver={allow}
@@ -188,7 +188,6 @@ export const Canvas: FC<CanvasProps> = ({
 
         {topLevel.map((mod, idx) => {
           const def = MODULES_BY_KEY[mod.key];
-
           const isACS = mod.key === "ampscript_country";
 
           return (
@@ -214,7 +213,6 @@ export const Canvas: FC<CanvasProps> = ({
                     : "border-slate-300 hover:border-blue-400"
                 }`}
               >
-                {/* Header */}
                 <div className="flex justify-between mb-2">
                   <span className="font-semibold text-xs">
                     {isACS ? "AMPscript Country Switcher" : def?.label}
@@ -230,7 +228,6 @@ export const Canvas: FC<CanvasProps> = ({
                   </button>
                 </div>
 
-                {/* ACS BUCKETS */}
                 {isACS && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {COUNTRIES.map((c) => (
@@ -240,7 +237,7 @@ export const Canvas: FC<CanvasProps> = ({
                 )}
               </div>
 
-              {/* Drop below module */}
+              {/* Drop under module */}
               <div
                 className="h-8 border border-dashed border-slate-400 text-xs flex items-center justify-center mb-4"
                 onDragOver={allow}
