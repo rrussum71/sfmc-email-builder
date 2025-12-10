@@ -2,6 +2,7 @@ import Sidebar from "./components/Sidebar";
 import { Canvas } from "./components/Canvas";
 import Inspector from "./components/Inspector";
 import ExportModal from "./components/ExportModal";
+import PreviewEmailModal from "./components/PreviewEmailModal";  // ⭐ NEW IMPORT
 
 import { useEmailBuilder } from "./hooks/useEmailBuilder";
 
@@ -10,11 +11,16 @@ export default function App() {
     modules,
     selectedId,
     bgColor,
+
     exportOpen,
     exportHtml,
+    previewOpen,     // ⭐ PREVIEW STATE
+
     setSelectedId,
     setBgColor,
     setExportOpen,
+    setPreviewOpen,  // ⭐ PREVIEW HANDLER
+
     addTopLevelModule,
     addNestedModule,
     moveTopLevelModule,
@@ -24,14 +30,14 @@ export default function App() {
     buildExportHtml,
   } = useEmailBuilder();
 
-  const selectedModule = modules.find((m) => m.id === selectedId) || null;
+  const selectedModule =
+    modules.find((m) => m.id === selectedId) || null;
 
   return (
     <div className="flex h-screen">
+
       {/* SIDEBAR */}
-      <Sidebar
-        onAdd={(key: string) => addTopLevelModule(key)}
-      />
+      <Sidebar onAdd={(key: string) => addTopLevelModule(key)} />
 
       {/* CANVAS */}
       <Canvas
@@ -49,7 +55,7 @@ export default function App() {
       <Inspector
         module={selectedModule}
         bgColor={bgColor}
-        onBgChange={(value: string) => setBgColor(value)}
+        onBgChange={setBgColor}
         onChangeField={(fieldId: string, value: string) =>
           updateModuleValue(selectedId!, fieldId, value)
         }
@@ -60,10 +66,19 @@ export default function App() {
         <ExportModal
           html={exportHtml}
           onClose={() => setExportOpen(false)}
+          onPreview={() => setPreviewOpen(true)} // ⭐ WIRE PREVIEW
         />
       )}
 
-      {/* FOOTER ACTION */}
+      {/* PREVIEW MODAL */}
+      {previewOpen && (
+        <PreviewEmailModal
+          html={exportHtml}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
+
+      {/* EXPORT BUTTON */}
       <button
         className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow"
         onClick={buildExportHtml}

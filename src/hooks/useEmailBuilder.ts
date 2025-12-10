@@ -48,8 +48,15 @@ export function useEmailBuilder() {
   const [modules, setModules] = useState<PlacedModule[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bgColor, setBgColor] = useState("#FFFFFF");
+
+  // ============================
+  // EXPORT + PREVIEW STATES
+  // ============================
   const [exportOpen, setExportOpen] = useState(false);
   const [exportHtml, setExportHtml] = useState("");
+
+  // ⭐ NEW: Preview modal state
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const defByKey = Object.fromEntries(
     MODULE_DEFINITIONS.map((m) => [m.key, m])
@@ -58,7 +65,6 @@ export function useEmailBuilder() {
   function makeEmptyValues(key: string) {
     const def = defByKey[key];
     const vals: Record<string, string> = {};
-
     def.fields.forEach((f) => (vals[f.id] = ""));
     return vals;
   }
@@ -80,10 +86,11 @@ export function useEmailBuilder() {
       const nested = prev.filter((m) => m.parentId);
 
       const i =
-        typeof index === "number" ? Math.min(Math.max(index, 0), top.length) : top.length;
+        typeof index === "number"
+          ? Math.min(Math.max(index, 0), top.length)
+          : top.length;
 
       top.splice(i, 0, mod);
-
       return [...top, ...nested];
     });
 
@@ -118,7 +125,6 @@ export function useEmailBuilder() {
       if (curIdx === -1) return prev;
 
       const [item] = top.splice(curIdx, 1);
-
       const safeIndex = Math.max(0, Math.min(index, top.length));
       top.splice(safeIndex, 0, item);
 
@@ -255,15 +261,20 @@ export function useEmailBuilder() {
     setExportOpen(true);
   }
 
+  // -------------------------------------------
+  // RETURN API
+  // -------------------------------------------
   return {
     modules,
     selectedId,
     bgColor,
     exportOpen,
     exportHtml,
+    previewOpen,       // ⭐ NEW
     setSelectedId,
     setBgColor,
     setExportOpen,
+    setPreviewOpen,    // ⭐ NEW
     addTopLevelModule,
     addNestedModule,
     moveTopLevelModule,
