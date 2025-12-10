@@ -59,6 +59,8 @@ Error generating stack: `+i.message+`
 <!-- END Body Copy -->
 `},{key:"image_grid_1x2",label:"2-Col Image",fields:[{id:"image_left",label:"Left Image Filename or URL",type:"text"},{id:"title_left",label:"Left Image Title",type:"text"},{id:"alias_left",label:"Left Link Alias",type:"text"},{id:"link_left",label:"Left Link URL",type:"text"},{id:"alt_left",label:"Left Alt Text",type:"text"},{id:"image_right",label:"Right Image Filename or URL",type:"text"},{id:"title_right",label:"Right Image Title",type:"text"},{id:"alias_right",label:"Right Link Alias",type:"text"},{id:"link_right",label:"Right Link URL",type:"text"},{id:"alt_right",label:"Right Alt Text",type:"text"}],renderHtml:e=>`
 <!-- START 1x2 Image Column -->
+<tr>
+  <td align="center" valign="top" style="font-size:0; padding: 0px; border-collapse: collapse;text-align:center">
   <!--[if (gte mso 9)|(IE)]>
 <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
 <tr>
@@ -113,6 +115,8 @@ Error generating stack: `+i.message+`
 </tr>
 </table>
 <![endif]-->
+</td>
+</tr>
   <!-- END 1x2 Image Column -->
 `},{key:"image_grid_1x2_cta",label:"2-Col Image + CTA",fields:[{id:"image1_src",label:"Left Image Filename or URL",type:"text"},{id:"image1_title",label:"Left Image Title",type:"text"},{id:"image1_alias",label:"Left Link Alias",type:"text"},{id:"image1_link",label:"Left Link URL",type:"text"},{id:"image1_alt",label:"Left Alt Text",type:"text"},{id:"image1_btn_title",label:"Left Button Title",type:"text"},{id:"image1_btn_alias",label:"Left Button Alias",type:"text"},{id:"image1_btn_link",label:"Left Button URL",type:"text"},{id:"image2_src",label:"Right Image Filename or URL",type:"text"},{id:"image2_title",label:"Right Image Title",type:"text"},{id:"image2_alias",label:"Right Link Alias",type:"text"},{id:"image2_link",label:"Right Link URL",type:"text"},{id:"image2_alt",label:"Right Alt Text",type:"text"},{id:"image2_btn_title",label:"Right Button Title",type:"text"},{id:"image2_btn_alias",label:"Right Button Alias",type:"text"},{id:"image2_btn_link",label:"Right Button URL",type:"text"}],renderHtml:e=>`
 <!-- START 1 of 2 Image  with Buttons Grid -->
