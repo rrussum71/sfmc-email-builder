@@ -10,14 +10,12 @@ export default function App() {
   const {
     modules,
     selectedId,
-    bgColor,
 
     exportOpen,
     exportHtml,
     previewOpen,     // ⭐ PREVIEW STATE
 
     setSelectedId,
-    setBgColor,
     setExportOpen,
     setPreviewOpen,  // ⭐ PREVIEW HANDLER
 
@@ -53,13 +51,11 @@ export default function App() {
 
       {/* INSPECTOR */}
       <Inspector
-        module={selectedModule}
-        bgColor={bgColor}
-        onBgChange={setBgColor}
-        onChangeField={(fieldId: string, value: string) =>
-          updateModuleValue(selectedId!, fieldId, value)
-        }
-      />
+  module={selectedModule}
+  onChangeField={(fieldId: string, value: string) =>
+    updateModuleValue(selectedId!, fieldId, value)
+  }
+/>
 
       {/* EXPORT MODAL */}
       {exportOpen && (

@@ -9,15 +9,32 @@ interface ExportModalProps {
 const ExportModal: FC<ExportModalProps> = ({ html, onClose, onPreview }) => {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+ const handleCopy = async () => {
+  try {
+    // Try direct clipboard first (works outside iframe)
+    await navigator.clipboard.writeText(html);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  } catch (err) {
+    console.warn("Direct clipboard failed. Sending to parent window…");
+
+    // Send message to parent CloudPage for clipboard handling
     try {
-      await navigator.clipboard.writeText(html);
+      window.parent.postMessage(
+        {
+          type: "copy_html",
+          payload: html
+        },
+        "*"
+      );
+      
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch (err) {
-      console.error("Clipboard copy failed:", err);
+    } catch (e) {
+      console.error("Parent postMessage failed:", e);
     }
-  };
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-6 z-50">

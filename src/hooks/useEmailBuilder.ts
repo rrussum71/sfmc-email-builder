@@ -1,3 +1,4 @@
+// src/hooks/useEmailBuilder.ts
 import { useState } from "react";
 import type { PlacedModule, Country } from "../types/Module";
 import { MODULE_DEFINITIONS } from "../data/moduleDefinitions";
@@ -46,9 +47,7 @@ function buildAliasFromTitle(value: string): string {
 export function useEmailBuilder() {
   const [modules, setModules] = useState<PlacedModule[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [bgColor, setBgColor] = useState("#FFFFFF");
 
-  // Export + Preview state
   const [exportOpen, setExportOpen] = useState(false);
   const [exportHtml, setExportHtml] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -60,14 +59,19 @@ export function useEmailBuilder() {
   function makeEmptyValues(key: string) {
     const def = defByKey[key];
     const vals: Record<string, string> = {};
-    def.fields.forEach((f) => (vals[f.id] = ""));
+    if (def) def.fields.forEach((f) => (vals[f.id] = ""));
     return vals;
   }
 
   // -------------------------------------------
-  // Add Top-Level
+  // Add Top-Level (TABLE WRAPPER ONLY)
   // -------------------------------------------
   function addTopLevelModule(key: string, index?: number) {
+    if (key !== "table_wrapper") {
+      console.warn("Only table_wrapper allowed as top-level");
+      return;
+    }
+
     const mod: PlacedModule = {
       id: nextId(),
       key,
@@ -77,7 +81,9 @@ export function useEmailBuilder() {
     };
 
     setModules((prev) => {
-      const top = prev.filter((m) => !m.parentId);
+      const top = prev.filter(
+        (m) => !m.parentId && m.key === "table_wrapper"
+      );
       const nested = prev.filter((m) => m.parentId);
 
       const i =
@@ -93,14 +99,20 @@ export function useEmailBuilder() {
   }
 
   // -------------------------------------------
-  // Add Nested (Country switcher)
+  // Add Nested
   // -------------------------------------------
-  function addNestedModule(key: string, parentId: string, country: Country) {
+  function addNestedModule(
+    key: string,
+    parentId: string,
+    country: Country | null
+  ) {
+    if (key === "table_wrapper") return;
+
     const mod: PlacedModule = {
       id: nextId(),
       key,
       parentId,
-      country,
+      country: country ?? undefined,
       values: makeEmptyValues(key),
     };
 
@@ -109,77 +121,92 @@ export function useEmailBuilder() {
   }
 
   // -------------------------------------------
-  // Move Top-Level
+  // Move top-level wrappers
   // -------------------------------------------
   function moveTopLevelModule(id: string, index: number) {
     setModules((prev) => {
-      const top = prev.filter((m) => !m.parentId);
+      const top = prev.filter(
+        (m) => !m.parentId && m.key === "table_wrapper"
+      );
       const nested = prev.filter((m) => m.parentId);
 
-      const curIdx = top.findIndex((m) => m.id === id);
-      if (curIdx === -1) return prev;
+      const curIndex = top.findIndex((m) => m.id === id);
+      if (curIndex === -1) return prev;
 
-      const [item] = top.splice(curIdx, 1);
-      const safeIndex = Math.max(0, Math.min(index, top.length));
-      top.splice(safeIndex, 0, item);
+      const [item] = top.splice(curIndex, 1);
+      const safe = Math.max(0, Math.min(index, top.length));
+      top.splice(safe, 0, item);
 
       return [...top, ...nested];
     });
   }
 
   // -------------------------------------------
-  // Move Nested (inside ACS buckets)
+  // Move Nested
   // -------------------------------------------
   function moveNestedModule(
     id: string,
     parentId: string,
-    country: Country,
+    country: Country | null,
     index: number
   ) {
     setModules((prev) => {
       const next = [...prev];
+      const curIndex = next.findIndex((m) => m.id === id);
+      if (curIndex === -1) return prev;
 
-      const curIdx = next.findIndex((m) => m.id === id);
-      if (curIdx === -1) return prev;
+      const [item] = next.splice(curIndex, 1);
+      if (item.key === "table_wrapper") return prev;
 
-      // Remove the item from its current position
-      const [item] = next.splice(curIdx, 1);
-
-      // Update to new parent/country
       item.parentId = parentId;
-      item.country = country;
+      item.country = country ?? undefined;
 
-      // Recompute siblings in the target bucket (excluding this item)
       const siblings = next.filter(
-        (m) => m.parentId === parentId && m.country === country
+        (m) =>
+          m.parentId === parentId &&
+          (m.country ?? undefined) === (country ?? undefined)
       );
-      const siblingIds = siblings.map((s) => s.id);
 
+      const ids = siblings.map((s) => s.id);
       const insertBeforeId =
-        index >= siblingIds.length ? null : siblingIds[index];
+        index >= ids.length ? null : ids[index];
 
-      const insertIndex = insertBeforeId
+      const insertAt = insertBeforeId
         ? next.findIndex((m) => m.id === insertBeforeId)
         : next.length;
 
-      next.splice(insertIndex, 0, item);
-
+      next.splice(insertAt, 0, item);
       return next;
     });
   }
 
   // -------------------------------------------
-  // Remove module + nested children
+  // Remove module + children
   // -------------------------------------------
   function removeModule(id: string) {
-    setModules((prev) =>
-      prev.filter((m) => m.id !== id && m.parentId !== id)
-    );
-    setSelectedId((curr) => (curr === id ? null : curr));
+    setModules((prev) => {
+      const removeIds = new Set([id]);
+
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const m of prev) {
+          if (m.parentId && removeIds.has(m.parentId)) {
+            if (!removeIds.has(m.id)) {
+              removeIds.add(m.id);
+              changed = true;
+            }
+          }
+        }
+      }
+
+      setSelectedId((cur) => (cur && removeIds.has(cur) ? null : cur));
+      return prev.filter((m) => !removeIds.has(m.id));
+    });
   }
 
   // -------------------------------------------
-  // Update fields + auto-alias
+  // Update values + auto alias
   // -------------------------------------------
   function updateModuleValue(id: string, field: string, value: string) {
     setModules((prev) =>
@@ -194,10 +221,9 @@ export function useEmailBuilder() {
         const map = ALIAS_MAP[m.key];
         if (map && map[field]) {
           const newAlias = buildAliasFromTitle(value);
-
           map[field].forEach((aliasField) => {
-            const oldAlias = m.values[aliasField];
-            if (!oldAlias || oldAlias.endsWith("_alias")) {
+            const old = m.values[aliasField];
+            if (!old || old.endsWith("_alias")) {
               updated.values[aliasField] = newAlias;
             }
           });
@@ -209,82 +235,94 @@ export function useEmailBuilder() {
   }
 
   // -------------------------------------------
-  // Build Export HTML
+  // EXPORT HTML
   // -------------------------------------------
   function buildExportHtml() {
     const lines: string[] = [];
 
-    lines.push(
-      `<table width="100%" cellpadding="0" cellspacing="0" style="background:${bgColor};">`
+    const wrappers = modules.filter(
+      (m) => !m.parentId && m.key === "table_wrapper"
     );
 
-    const top = modules.filter((m) => !m.parentId);
+    wrappers.forEach((wrapper) => {
+      const bg = wrapper.values["bg"] || "#FFFFFF";
 
-    top.forEach((mod) => {
-      const def = defByKey[mod.key];
-      if (!def) return;
+      // ⭐ UPDATED MSO-SAFE TABLE TAG
+      lines.push(
+        `<table role="presentation" 
+                width="100%" 
+                border="0" 
+                cellpadding="0" 
+                cellspacing="0" 
+                style="border-collapse:collapse;border:none;background:${bg};">`
+      );
 
-      if (mod.key === "ampscript_country") {
-        let first = true;
+      const children = modules.filter((m) => m.parentId === wrapper.id);
 
-        COUNTRY_ORDER.forEach((country) => {
-          let kids;
+      children.forEach((mod) => {
+        const def = defByKey[mod.key];
+        if (!def) return;
+
+        if (mod.key === "ampscript_country") {
+          let first = true;
+
+          COUNTRY_ORDER.forEach((country) => {
+            let kids: PlacedModule[];
+
             if (country === "Default") {
-              // Default mirrors US
               kids = modules.filter(
-                (m) => m.parentId === mod.id && m.country === "US"
+                (m) =>
+                  m.parentId === mod.id &&
+                  m.country === "US"
               );
             } else {
-              // All other countries behave normally
               kids = modules.filter(
-                (m) => m.parentId === mod.id && m.country === country
+                (m) =>
+                  m.parentId === mod.id &&
+                  m.country === country
               );
             }
 
-          if (!kids.length) return;
+            if (!kids.length) return;
 
-          if (country === "Default") {
-            lines.push(`%%[ ELSE ]%%`);
-          } else if (first) {
-            lines.push(`%%[ IF @Country == "${country}" THEN ]%%`);
-            first = false;
-          } else {
-            lines.push(`%%[ ELSEIF @Country == "${country}" THEN ]%%`);
-          }
+            if (country === "Default") {
+              lines.push(`%%[ ELSE ]%%`);
+            } else if (first) {
+              lines.push(`%%[ IF @Country == "${country}" THEN ]%%`);
+              first = false;
+            } else {
+              lines.push(`%%[ ELSEIF @Country == "${country}" THEN ]%%`);
+            }
 
-          kids.forEach((child) => {
-            const childDef = defByKey[child.key];
-            if (childDef) lines.push(childDef.renderHtml(child.values));
+            kids.forEach((child) => {
+              const childDef = defByKey[child.key];
+              if (childDef) lines.push(childDef.renderHtml(child.values));
+            });
           });
-        });
 
-        if (!first) lines.push(`%%[ ENDIF ]%%`);
-        return;
-      }
+          if (!first) lines.push(`%%[ ENDIF ]%%`);
+          return;
+        }
 
-      lines.push(def.renderHtml(mod.values));
+        lines.push(def.renderHtml(mod.values));
+      });
+
+      lines.push(`</table>`);
     });
 
-    lines.push(`</table>`);
-
-    setExportHtml(lines.join("\n"));
+    setExportHtml(lines.join("\n\n"));
     setExportOpen(true);
+    setPreviewOpen(false);
   }
 
-  // -------------------------------------------
-  // RETURN API
-  // -------------------------------------------
   return {
     modules,
     selectedId,
-    bgColor,
-
     exportOpen,
     exportHtml,
     previewOpen,
 
     setSelectedId,
-    setBgColor,
     setExportOpen,
     setPreviewOpen,
 

@@ -23,6 +23,7 @@ export function resolveSfmcImageUrl(url: string): string {
 
 // ---------------------------------------------------------------------------
 // MODULE DEFINITIONS  (ordered for business)
+// 0. Table Wrapper (NEW, required as top-level container)
 // 1. Full Width Image
 // 2. Body Copy
 // 3. 2-Col Image
@@ -33,6 +34,27 @@ export function resolveSfmcImageUrl(url: string): string {
 // 8. AMPscript Country Switcher
 // ---------------------------------------------------------------------------
 export const MODULE_DEFINITIONS: ModuleDefinition[] = [
+  /* ============================================================
+     0) TABLE WRAPPER (TOP-LEVEL ONLY)
+     - Required container for all other modules.
+     - Each wrapper exports its own <table> with background color.
+  ============================================================ */
+  {
+    key: "table_wrapper",
+    label: "Table Wrapper (Section)",
+    fields: [
+      {
+        id: "bg",
+        label: "Table Background Color (#HEX)",
+        type: "text",
+      },
+    ],
+    // NOTE: Table wrapper HTML is composed in useEmailBuilder.buildExportHtml,
+    // because it must wrap its child modules. This is just a placeholder.
+    renderHtml: () =>
+      "<!-- Table Wrapper: HTML is assembled with child modules at export time. -->",
+  },
+
   /* ============================================================
      1) FULL WIDTH IMAGE
   ============================================================ */
@@ -53,7 +75,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 <!-- START ${v.image_title || ""} Image Full Width -->
 <tr>
   <td style="padding:0;text-align:center;">
-    <a href="${v.link || ""}" title="${v.image_title || ""}" alias="${v.link_alias || ""}" target="_blank" style="text-decoration:none;">
+    <a href="${v.link || ""}" title="${v.image_title || ""}" alias="${
+      v.link_alias || ""
+    }" target="_blank" style="text-decoration:none;">
       <img src="${resolveSfmcImageUrl(v.image)}" alt="${v.alt || ""}" width="640" style="width:100%;height:auto;display:block;">
     </a>
   </td>
@@ -84,27 +108,27 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 
   /* ============================================================
      3) 2 COL IMAGE
-     Business note: Left & Right each have their own alias,
-     but alias values use "<normalized_title>_alias".
   ============================================================ */
   {
-    key: "image_grid_1x2",
-    label: "2-Col Image",
-    fields: [
-      { id: "image_left", label: "Left Image Filename or URL", type: "text" },
-      { id: "title_left", label: "Left Image Title", type: "text" },
-      { id: "alias_left", label: "Left Link Alias", type: "text" },
-      { id: "link_left", label: "Left Link URL", type: "text" },
-      { id: "alt_left", label: "Left Alt Text", type: "text" },
+  key: "image_grid_1x2",
+  label: "2-Col Image",
+  fields: [
+    { id: "image_left", label: "Left Image Filename or URL", type: "text" },
+    { id: "title_left", label: "Left Image Title", type: "text" },
+    { id: "alias_left", label: "Left Link Alias", type: "text" },
+    { id: "link_left", label: "Left Link URL", type: "text" },
+    { id: "alt_left", label: "Left Alt Text", type: "text" },
 
-      { id: "image_right", label: "Right Image Filename or URL", type: "text" },
-      { id: "title_right", label: "Right Image Title", type: "text" },
-      { id: "alias_right", label: "Right Link Alias", type: "text" },
-      { id: "link_right", label: "Right Link URL", type: "text" },
-      { id: "alt_right", label: "Right Alt Text", type: "text" },
-    ],
-   renderHtml: (v) => `
+    { id: "image_right", label: "Right Image Filename or URL", type: "text" },
+    { id: "title_right", label: "Right Image Title", type: "text" },
+    { id: "alias_right", label: "Right Link Alias", type: "text" },
+    { id: "link_right", label: "Right Link URL", type: "text" },
+    { id: "alt_right", label: "Right Alt Text", type: "text" },
+  ],
+  renderHtml: (v) => `
 <!-- START 1x2 Image Column -->
+<tr>
+  <td align="center" valign="top" style="font-size:0; padding: 0px; border-collapse: collapse;text-align:center">
   <!--[if (gte mso 9)|(IE)]>
 <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
 <tr>
@@ -159,39 +183,41 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 </tr>
 </table>
 <![endif]-->
+</td>
+</tr>
   <!-- END 1x2 Image Column -->
 `,
-  },
+},
 
   /* ============================================================
      4) 2 COL IMAGE + CTA
-     Business: all aliases are "<normalized_title>_alias"
   ============================================================ */
   {
-    key: "image_grid_1x2_cta",
-    label: "2-Col Image + CTA",
-    fields: [
-      { id: "image1_src", label: "Left Image Filename or URL", type: "text" },
-      { id: "image1_title", label: "Left Image Title", type: "text" },
-      { id: "image1_alias", label: "Left Link Alias", type: "text" },
-      { id: "image1_link", label: "Left Link URL", type: "text" },
-      { id: "image1_alt", label: "Left Alt Text", type: "text" },
+  key: "image_grid_1x2_cta",
+  label: "2-Col Image + CTA",
+  fields: [
+    { id: "image1_src", label: "Left Image Filename or URL", type: "text" },
+    { id: "image1_title", label: "Left Image Title", type: "text" },
+    { id: "image1_alias", label: "Left Link Alias", type: "text" },
+    { id: "image1_link", label: "Left Link URL", type: "text" },
+    { id: "image1_alt", label: "Left Alt Text", type: "text" },
 
-      { id: "image1_btn_title", label: "Left Button Title", type: "text" },
-      { id: "image1_btn_alias", label: "Left Button Alias", type: "text" },
-      { id: "image1_btn_link", label: "Left Button URL", type: "text" },
+    { id: "image1_btn_title", label: "Left Button Title", type: "text" },
+    { id: "image1_btn_alias", label: "Left Button Alias", type: "text" },
+    { id: "image1_btn_link", label: "Left Button URL", type: "text" },
 
-      { id: "image2_src", label: "Right Image Filename or URL", type: "text" },
-      { id: "image2_title", label: "Right Image Title", type: "text" },
-      { id: "image2_alias", label: "Right Link Alias", type: "text" },
-      { id: "image2_link", label: "Right Link URL", type: "text" },
-      { id: "image2_alt", label: "Right Alt Text", type: "text" },
+    { id: "image2_src", label: "Right Image Filename or URL", type: "text" },
+    { id: "image2_title", label: "Right Image Title", type: "text" },
+    { id: "image2_alias", label: "Right Link Alias", type: "text" },
+    { id: "image2_link", label: "Right Link URL", type: "text" },
+    { id: "image2_alt", label: "Right Alt Text", type: "text" },
 
-      { id: "image2_btn_title", label: "Right Button Title", type: "text" },
-      { id: "image2_btn_alias", label: "Right Button Alias", type: "text" },
-      { id: "image2_btn_link", label: "Right Button URL", type: "text" },
-    ],
-    renderHtml: (v) => `
+    { id: "image2_btn_title", label: "Right Button Title", type: "text" },
+    { id: "image2_btn_alias", label: "Right Button Alias", type: "text" },
+    { id: "image2_btn_link", label: "Right Button URL", type: "text" },
+  ],
+
+  renderHtml: (v) => `
 <!-- START 1 of 2 Image  with Buttons Grid -->
 <tr>
   <td align="center" valign="top" style="font-size:0; padding: 0px; border-collapse: collapse;text-align:center">
@@ -266,10 +292,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
               </tr>
               <tr>
                 <td>
-                  <!-- END body text -->
                   <div style="text-align:center;padding: 10px 0;">
                     <center>
-                      <table role="presentation" width="100%" >
+                      <table role="presentation" width="100%">
                         <tr>
                           <td style="padding:10px;text-align:center;">
                             <p style="color:#499796;margin:0;font-family:Arial;">
@@ -306,8 +331,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 </tr>
 <!-- END 1x2 Image  with Buttons  Grid -->
 `,
+},
 
-  },
+
 
   /* ============================================================
      5) CTA BUTTON
@@ -324,7 +350,9 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 <!-- START Button -->
 <tr>
   <td style="text-align:center;padding:20px;">
-    <a href="${v.url || ""}" alias="${v.alias || ""}" style="font-family:Arial;font-size:18px;background:#fff;border:3px solid;padding:14px 25px;text-decoration:none;color:#000;display:inline-block;">
+    <a href="${v.url || ""}" alias="${
+      v.alias || ""
+    }" style="font-family:Arial;font-size:18px;background:#fff;border:3px solid;padding:14px 25px;text-decoration:none;color:#000;display:inline-block;">
       ${v.title || ""}
     </a>
   </td>
