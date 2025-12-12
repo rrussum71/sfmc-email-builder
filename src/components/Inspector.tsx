@@ -1,6 +1,4 @@
 // src/components/Inspector.tsx
-
-import type { FC, ChangeEvent } from "react";
 import type { PlacedModule } from "../types/Module";
 import { MODULE_DEFINITIONS, resolveSfmcImageUrl } from "../data/moduleDefinitions";
 
@@ -9,155 +7,195 @@ interface InspectorProps {
   onChangeField: (fieldId: string, value: string) => void;
 }
 
-// Heuristic: which field ids should show an image preview
-function isImageField(fieldId: string): boolean {
-  const lowered = fieldId.toLowerCase();
-  return (
-    lowered.includes("image") ||
-    lowered.includes("img") ||
-    lowered.endsWith("_src")
-  );
-}
-
-const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
-  // No module selected
+export default function Inspector({ module, onChangeField }: InspectorProps) {
   if (!module) {
     return (
-      <aside className="w-80 border-l border-slate-200 bg-white p-4 text-sm text-slate-500">
-        <p className="text-xs text-slate-500">Select a module to edit.</p>
+      <aside className="w-80 border-l bg-white p-4 text-sm text-slate-500">
+        Select a module to edit.
       </aside>
     );
   }
 
-  const def = MODULE_DEFINITIONS.find((d) => d.key === module.key);
+  const def = MODULE_DEFINITIONS.find((m) => m.key === module.key);
+  if (!def) {
+    return (
+      <aside className="w-80 border-l bg-white p-4 text-sm text-red-500">
+        Unknown module type.
+      </aside>
+    );
+  }
 
-  const handleChange =
-    (fieldId: string) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      onChangeField(fieldId, e.target.value);
-    };
+  const values = module.values ?? {};
 
-  // Special UI for the Table Wrapper
-  if (module.key === "table_wrapper") {
-    const bgValue = module.values["bg"] ?? "#FFFFFF";
+  // ------------------------------------------------------
+  // IMAGE FIELD DETECTION (real images only)
+  // ------------------------------------------------------
+  function isImageField(id: string): boolean {
+    return (
+      id.includes("image") &&
+      !id.includes("title") &&
+      !id.includes("alias") &&
+      !id.includes("btn")
+    );
+  }
+
+  function renderImagePreview(id: string, val: string) {
+    if (!isImageField(id)) return null;
+    if (!val) return null;
+
+    let url = val.trim();
+    if (!/^https?:\/\//.test(url)) {
+      url = resolveSfmcImageUrl(url);
+    }
 
     return (
-      <aside className="w-80 border-l border-slate-200 bg-white p-4">
-        <h2 className="text-xs font-semibold text-slate-700 mb-3">
-          Table Wrapper (Section)
-        </h2>
+      <div className="mt-2 mb-4">
+        <div className="text-[11px] text-slate-600 mb-1">Image Preview (resolved URL)</div>
 
-        <label className="block mb-2">
-          <span className="block text-[11px] font-semibold text-slate-600 mb-1">
-            Table Background Color (#HEX)
-          </span>
-          <input
-            type="text"
-            className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
-            placeholder="#FFFFFF"
-            value={bgValue}
-            onChange={(e) => onChangeField("bg", e.target.value)}
+        <div className="border rounded p-2 bg-white flex items-center justify-center">
+          <img
+            src={url}
+            alt="preview"
+            style={{ maxWidth: "100%", height: "auto" }}
+            onError={(e) => ((e.target as HTMLImageElement).style.display = "none")}
           />
-        </label>
+        </div>
 
-        <p className="mt-3 text-[11px] text-slate-400">
-          This color applies only to this table section. You can stack multiple
-          table wrappers, each with its own background.
-        </p>
-      </aside>
+        <div className="text-[11px] text-blue-700 break-all mt-1">{url}</div>
+      </div>
     );
   }
 
-  // Generic module inspector
+  // ------------------------------------------------------
+  // FIELD ORDERING LOGIC (TS SAFE)
+  // ------------------------------------------------------
+  function getOrderedFields() {
+    const fields = def?.fields ?? [];
+
+    if (!module) return fields;
+
+    // ------------------------------
+    // Full Width Image
+    // ------------------------------
+    if (module.key === "image_full_width") {
+      const order = ["image", "alt", "image_title", "link", "link_alias"];
+      return [...fields].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    }
+
+    // ------------------------------
+    // 2-Col Image
+    // ------------------------------
+    if (module.key === "image_grid_1x2") {
+      const leftOrder = ["image_left", "alt_left", "title_left", "link_left", "alias_left"];
+      const rightOrder = ["image_right", "alt_right", "title_right", "link_right", "alias_right"];
+
+      const left = fields.filter((f) => f.id.endsWith("_left"));
+      const right = fields.filter((f) => f.id.endsWith("_right"));
+      const normal = fields.filter(
+        (f) => !f.id.endsWith("_left") && !f.id.endsWith("_right")
+      );
+
+      left.sort((a, b) => leftOrder.indexOf(a.id) - leftOrder.indexOf(b.id));
+      right.sort((a, b) => rightOrder.indexOf(a.id) - rightOrder.indexOf(b.id));
+
+      return [...normal, ...left, ...right];
+    }
+
+    // ------------------------------
+    // 2-Col Image + CTA
+    // ------------------------------
+    if (module.key === "image_grid_1x2_cta") {
+      const leftOrder = [
+        "image1_src",
+        "image1_alt",
+        "image1_title",
+        "image1_link",
+        "image1_alias",
+        "image1_btn_title",
+        "image1_btn_alias",
+        "image1_btn_link",
+      ];
+
+      const rightOrder = [
+        "image2_src",
+        "image2_alt",
+        "image2_title",
+        "image2_link",
+        "image2_alias",
+        "image2_btn_title",
+        "image2_btn_alias",
+        "image2_btn_link",
+      ];
+
+      const left = fields.filter(
+        (f) => f.id.startsWith("image1_") || f.id.startsWith("image1_btn")
+      );
+      const right = fields.filter(
+        (f) => f.id.startsWith("image2_") || f.id.startsWith("image2_btn")
+      );
+      const normal = fields.filter((f) => !left.includes(f) && !right.includes(f));
+
+      left.sort((a, b) => leftOrder.indexOf(a.id) - leftOrder.indexOf(b.id));
+      right.sort((a, b) => rightOrder.indexOf(a.id) - rightOrder.indexOf(b.id));
+
+      return [...normal, ...left, ...right];
+    }
+
+    return fields;
+  }
+
+  const orderedFields = getOrderedFields();
+
+  // ------------------------------------------------------
+  // RENDER SETTINGS PANEL
+  // ------------------------------------------------------
   return (
-    <aside className="w-80 border-l border-slate-200 bg-white p-4 overflow-auto">
-      <h2 className="text-xs font-semibold text-slate-700 mb-3">
-        {def?.label ?? "Module Settings"}
-      </h2>
+    <aside className="w-80 border-l bg-white p-4 overflow-auto">
+      <h2 className="text-sm font-semibold mb-4">Settings: {def.label}</h2>
 
-      {!def ? (
-        <p className="text-[11px] text-slate-500">
-          No definition found for <code>{module.key}</code>.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {def.fields.map((field) => {
-            const value = module.values[field.id] ?? "";
+      {orderedFields.map((field) => {
+        const val = values[field.id] ?? "";
 
-            // NOTE fields are just informational
-            if (field.type === "note") {
-              return (
-                <div key={field.id} className="text-[11px] text-slate-500 italic">
-                  {field.label}
-                </div>
-              );
-            }
+        return (
+          <div key={field.id} className="mb-4">
+            <label className="block text-xs font-semibold mb-1">{field.label}</label>
 
-            // Textarea / Code / Text
-            let control: JSX.Element;
-            if (field.type === "textarea") {
-              control = (
-                <textarea
-                  className="w-full border border-slate-300 rounded px-2 py-1 text-xs min-h-[80px]"
-                  value={value}
-                  onChange={handleChange(field.id)}
-                />
-              );
-            } else if (field.type === "code") {
-              control = (
-                <textarea
-                  className="w-full border border-slate-300 rounded px-2 py-1 text-[11px] font-mono min-h-[140px]"
-                  value={value}
-                  onChange={handleChange(field.id)}
-                />
-              );
-            } else {
-              control = (
-                <input
-                  type="text"
-                  className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
-                  value={value}
-                  onChange={handleChange(field.id)}
-                />
-              );
-            }
+            {/* FIELD TYPE HANDLING */}
+            {field.type === "text" && (
+              <input
+                className="w-full border rounded px-2 py-1 text-sm"
+                value={val}
+                onChange={(e) => onChangeField(field.id, e.target.value)}
+              />
+            )}
 
-            const showPreview = isImageField(field.id) && !!value;
-            const previewSrc = showPreview ? resolveSfmcImageUrl(value) : "";
+            {field.type === "textarea" && (
+              <textarea
+                className="w-full border rounded px-2 py-1 text-sm"
+                rows={4}
+                value={val}
+                onChange={(e) => onChangeField(field.id, e.target.value)}
+              />
+            )}
 
-            return (
-              <div key={field.id}>
-                <label className="block mb-1">
-                  <span className="block text-[11px] font-semibold text-slate-600 mb-1">
-                    {field.label}
-                  </span>
-                  {control}
-                </label>
+            {field.type === "code" && (
+              <textarea
+                className="w-full border rounded font-mono px-2 py-1 text-xs"
+                rows={6}
+                value={val}
+                onChange={(e) => onChangeField(field.id, e.target.value)}
+              />
+            )}
 
-                {showPreview && (
-                  <div className="mt-1 border border-slate-200 rounded bg-slate-50 p-2">
-                    <div className="text-[10px] text-slate-500 mb-1">
-                      Image Preview (resolved URL)
-                    </div>
-                    <div className="border border-slate-200 bg-white p-1 flex items-center justify-center">
-                      {/* Keep height flexible but constrained */}
-                      <img
-                        src={previewSrc}
-                        alt={field.label}
-                        style={{ maxWidth: "100%", height: "auto", display: "block" }}
-                      />
-                    </div>
-                    <div className="mt-1 text-[10px] text-slate-400 break-all">
-                      {previewSrc}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+            {field.type === "note" && (
+              <div className="text-[11px] text-slate-500 italic">{field.label}</div>
+            )}
+
+            {/* IMAGE PREVIEW */}
+            {renderImagePreview(field.id, val)}
+          </div>
+        );
+      })}
     </aside>
   );
-};
-
-export default Inspector;
+}
