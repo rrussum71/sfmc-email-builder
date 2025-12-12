@@ -28,7 +28,7 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
   const values = module.values ?? {};
 
   // ------------------------------------------------------
-  // IMAGE FIELD DETECTION (real images only)
+  // IMAGE FIELD DETECTION
   // ------------------------------------------------------
   function isImageField(id: string): boolean {
     return (
@@ -50,7 +50,9 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
 
     return (
       <div className="mt-2 mb-4">
-        <div className="text-[11px] text-slate-600 mb-1">Image Preview (resolved URL)</div>
+        <div className="text-[11px] text-slate-600 mb-1">
+          Image Preview (resolved URL)
+        </div>
 
         <div className="border rounded p-2 bg-white flex items-center justify-center">
           <img
@@ -67,24 +69,20 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
   }
 
   // ------------------------------------------------------
-  // FIELD ORDERING LOGIC (TS SAFE)
+  // FIELD ORDERING LOGIC
   // ------------------------------------------------------
   function getOrderedFields() {
     const fields = def?.fields ?? [];
 
     if (!module) return fields;
 
-    // ------------------------------
-    // Full Width Image
-    // ------------------------------
+    // ---------- FULL WIDTH IMAGE ----------
     if (module.key === "image_full_width") {
       const order = ["image", "alt", "image_title", "link", "link_alias"];
       return [...fields].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
     }
 
-    // ------------------------------
-    // 2-Col Image
-    // ------------------------------
+    // ---------- 2-COL BASIC ----------
     if (module.key === "image_grid_1x2") {
       const leftOrder = ["image_left", "alt_left", "title_left", "link_left", "alias_left"];
       const rightOrder = ["image_right", "alt_right", "title_right", "link_right", "alias_right"];
@@ -101,9 +99,7 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
       return [...normal, ...left, ...right];
     }
 
-    // ------------------------------
-    // 2-Col Image + CTA
-    // ------------------------------
+    // ---------- 2-COL CTA ----------
     if (module.key === "image_grid_1x2_cta") {
       const leftOrder = [
         "image1_src",
@@ -133,6 +129,7 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
       const right = fields.filter(
         (f) => f.id.startsWith("image2_") || f.id.startsWith("image2_btn")
       );
+
       const normal = fields.filter((f) => !left.includes(f) && !right.includes(f));
 
       left.sort((a, b) => leftOrder.indexOf(a.id) - leftOrder.indexOf(b.id));
@@ -147,7 +144,7 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
   const orderedFields = getOrderedFields();
 
   // ------------------------------------------------------
-  // RENDER SETTINGS PANEL
+  // RENDER SETTINGS UI
   // ------------------------------------------------------
   return (
     <aside className="w-80 border-l bg-white p-4 overflow-auto">
@@ -158,9 +155,26 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
 
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-xs font-semibold mb-1">{field.label}</label>
+            <label className="block text-xs font-semibold mb-1">
+              {field.label}
+            </label>
 
-            {/* FIELD TYPE HANDLING */}
+            {/* SELECT FIELD (NEW) */}
+            {field.type === "select" && (
+              <select
+                className="w-full border rounded px-2 py-1 text-sm bg-white"
+                value={val}
+                onChange={(e) => onChangeField(field.id, e.target.value)}
+              >
+                {(field.options ?? []).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* TEXT FIELD */}
             {field.type === "text" && (
               <input
                 className="w-full border rounded px-2 py-1 text-sm"
@@ -169,6 +183,7 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
               />
             )}
 
+            {/* TEXTAREA */}
             {field.type === "textarea" && (
               <textarea
                 className="w-full border rounded px-2 py-1 text-sm"
@@ -178,6 +193,7 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
               />
             )}
 
+            {/* CODE INPUT */}
             {field.type === "code" && (
               <textarea
                 className="w-full border rounded font-mono px-2 py-1 text-xs"
@@ -187,8 +203,11 @@ export default function Inspector({ module, onChangeField }: InspectorProps) {
               />
             )}
 
+            {/* NOTE FIELD */}
             {field.type === "note" && (
-              <div className="text-[11px] text-slate-500 italic">{field.label}</div>
+              <div className="text-[11px] text-slate-500 italic">
+                {field.label}
+              </div>
             )}
 
             {/* IMAGE PREVIEW */}
