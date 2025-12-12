@@ -5,7 +5,7 @@ import { ModuleDefinition } from "../types/Module";
 // GLOBAL SFMC IMAGE RESOLVER (shared by all modules)
 // ---------------------------------------------------------------------------
 export const SFMC_BASE_IMAGE_URL =
-  "http://image.marketing.rodanandfields.com/lib/fe9113737767047572/m/1/";
+  "https://image.marketing.rodanandfields.com/lib/fe9113737767047572/m/1/";
 
 export function resolveSfmcImageUrl(url: string): string {
   if (!url) return "";
