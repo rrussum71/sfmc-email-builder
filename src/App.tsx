@@ -27,7 +27,7 @@ export default function App() {
     updateModuleValue,
     buildExportHtml,
   } = useEmailBuilder();
-
+  
   const selectedModule =
     modules.find((m) => m.id === selectedId) || null;
 
@@ -50,11 +50,13 @@ export default function App() {
       />
 
       {/* INSPECTOR */}
-      <Inspector
+     <Inspector
   module={selectedModule}
-  onChangeField={(fieldId: string, value: string) =>
-    updateModuleValue(selectedId!, fieldId, value)
-  }
+  onChangeField={(fieldId, value) => {
+    if (!selectedModule) return;
+
+    updateModuleValue(selectedModule.id, fieldId, value);
+  }}
 />
 
       {/* EXPORT MODAL */}
