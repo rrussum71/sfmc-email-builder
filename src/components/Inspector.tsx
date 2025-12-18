@@ -1,4 +1,3 @@
-// src/components/Inspector.tsx
 import { FC, useState } from "react";
 import { PlacedModule } from "../types/Module";
 import { MODULES_BY_KEY, resolveSfmcImageUrl } from "../data/moduleDefinitions";
@@ -8,7 +7,6 @@ interface InspectorProps {
   onChangeField: (fieldId: string, value: string) => void;
 }
 
-// Only true image fields (used for preview)
 const IMAGE_FIELDS = new Set([
   "image",
   "image_left",
@@ -17,7 +15,6 @@ const IMAGE_FIELDS = new Set([
   "image2_src",
 ]);
 
-// Map alias field → title field (business logic)
 function getTitleFieldForAlias(
   moduleKey: string,
   aliasId: string
@@ -50,28 +47,38 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const def = module ? MODULES_BY_KEY[module.key] : null;
 
+  function handleFieldChange(fieldId: string, value: string) {
+    onChangeField(fieldId, value);
+
+    if (module?.key !== "image_grid_1x2_cta") return;
+
+    if (fieldId === "image1_link") {
+      onChangeField("image1_btn_link", value);
+    }
+
+    if (fieldId === "image2_link") {
+      onChangeField("image2_btn_link", value);
+    }
+  }
+
   return (
     <aside className="w-[420px] bg-white border-l border-slate-200 p-6 overflow-y-auto h-screen shadow-inner flex flex-col">
-      {/* Header */}
       <div className="sticky top-0 bg-white z-10 pb-4 border-b border-slate-200">
         <h2 className="text-lg font-semibold text-slate-700">
           Content Block Settings
         </h2>
       </div>
 
-      {/* No block selected */}
       {!module || !def ? (
         <div className="mt-6 text-xs text-slate-500">
           No block selected. Click a module on the canvas to edit its content.
         </div>
       ) : (
         <div className="mt-6 space-y-8">
-          {/* Module Title */}
           <h3 className="text-base font-bold text-slate-700">
             {def.label}
           </h3>
 
-          {/* Fields */}
           <div className="space-y-4">
             {def.fields.map((field) => {
               const value = module.values[field.id] ?? "";
@@ -82,7 +89,11 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
               );
               const isAlias = !!titleFieldId;
 
-              // Hide alias until title exists
+              const isLockedCtaUrl =
+                module.key === "image_grid_1x2_cta" &&
+                (field.id === "image1_btn_link" ||
+                  field.id === "image2_btn_link");
+
               if (isAlias) {
                 const titleVal = module.values[titleFieldId!] ?? "";
                 if (!titleVal.trim()) return null;
@@ -92,7 +103,6 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
 
               return (
                 <div key={field.id} className="space-y-1">
-                  {/* Label */}
                   <label className="block text-xs font-semibold text-slate-600">
                     {field.label}
                     {isAlias && (
@@ -100,57 +110,57 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
                         (auto-generated)
                       </span>
                     )}
+                    {isLockedCtaUrl && (
+                      <span className="ml-1 text-[10px] text-blue-500">
+                        (linked to image URL)
+                      </span>
+                    )}
                   </label>
 
-                  {/* Text */}
                   {field.type === "text" && (
                     <input
                       type="text"
                       value={value}
-                      readOnly={isAlias}
+                      readOnly={isAlias || isLockedCtaUrl}
                       onChange={(e) => {
-                        if (!isAlias) {
-                          onChangeField(field.id, e.target.value);
+                        if (!isAlias && !isLockedCtaUrl) {
+                          handleFieldChange(field.id, e.target.value);
                         }
                       }}
                       className={`w-full rounded border px-2 py-1 text-xs ${
-                        isAlias
+                        isAlias || isLockedCtaUrl
                           ? "border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
                           : "border-slate-300"
                       }`}
                     />
                   )}
 
-                  {/* Textarea */}
                   {field.type === "textarea" && (
                     <textarea
                       value={value}
                       onChange={(e) =>
-                        onChangeField(field.id, e.target.value)
+                        handleFieldChange(field.id, e.target.value)
                       }
                       className="w-full rounded border border-slate-300 px-2 py-1 text-xs min-h-[120px]"
                     />
                   )}
 
-                  {/* Code */}
                   {field.type === "code" && (
                     <textarea
                       value={value}
                       onChange={(e) =>
-                        onChangeField(field.id, e.target.value)
+                        handleFieldChange(field.id, e.target.value)
                       }
                       className="w-full rounded border border-slate-300 px-2 py-1 text-xs min-h-[200px] font-mono bg-slate-50"
                     />
                   )}
 
-                  {/* Note */}
                   {field.type === "note" && (
                     <p className="text-[11px] text-slate-500 italic">
                       {field.label}
                     </p>
                   )}
 
-                  {/* Image Preview */}
                   {isImageField && value && (
                     <div className="mt-1">
                       <img
@@ -158,9 +168,7 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
                         alt=""
                         className="w-24 h-24 object-contain border border-slate-200 rounded cursor-zoom-in bg-white"
                         onClick={() =>
-                          setPreviewUrl(
-                            resolveSfmcImageUrl(value)
-                          )
+                          setPreviewUrl(resolveSfmcImageUrl(value))
                         }
                       />
                       <div className="text-[10px] text-slate-400 mt-0.5">
@@ -175,7 +183,6 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
         </div>
       )}
 
-      {/* Fullscreen Image Preview */}
       {previewUrl && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-3 max-w-3xl max-h-[90vh] flex flex-col">

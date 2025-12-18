@@ -398,8 +398,7 @@ export const Canvas: FC<CanvasProps> = ({
 
         {topLevel.length === 0 ? (
           <div className="text-xs text-slate-500 text-center py-10 border border-dashed border-slate-300 rounded bg-white">
-            Begin by dragging a <strong>Table Wrapper</strong> from the
-            sidebar into this canvas. All content modules must live
+            Begin by dragging <strong>Table Wrapper Module</strong> into this canvas. All content modules must live
             inside a table.
           </div>
         ) : (
