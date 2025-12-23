@@ -2,7 +2,7 @@ import Sidebar from "./components/Sidebar";
 import { Canvas } from "./components/Canvas";
 import Inspector from "./components/Inspector";
 import ExportModal from "./components/ExportModal";
-import PreviewEmailModal from "./components/PreviewEmailModal";  // ⭐ NEW IMPORT
+import PreviewEmailModal from "./components/PreviewEmailModal";
 
 import { useEmailBuilder } from "./hooks/useEmailBuilder";
 
@@ -13,62 +13,57 @@ export default function App() {
 
     exportOpen,
     exportHtml,
-    previewOpen,     // ⭐ PREVIEW STATE
+    previewOpen,
 
     setSelectedId,
     setExportOpen,
-    setPreviewOpen,  // ⭐ PREVIEW HANDLER
+    setPreviewOpen,
 
     addTopLevelModule,
     addNestedModule,
     moveTopLevelModule,
     moveNestedModule,
     removeModule,
+    duplicateModule,
     updateModuleValue,
     buildExportHtml,
   } = useEmailBuilder();
-  
+
   const selectedModule =
     modules.find((m) => m.id === selectedId) || null;
 
   return (
     <div className="flex h-screen">
+      <Sidebar onAdd={addTopLevelModule} />
 
-      {/* SIDEBAR */}
-      <Sidebar onAdd={(key: string) => addTopLevelModule(key)} />
-
-      {/* CANVAS */}
       <Canvas
         modules={modules}
         selectedId={selectedId}
         onSelect={setSelectedId}
         onRemove={removeModule}
+        onDuplicate={duplicateModule}
         onAddTopLevel={addTopLevelModule}
         onAddNested={addNestedModule}
         onReorderTopLevel={moveTopLevelModule}
         onReorderNested={moveNestedModule}
       />
 
-      {/* INSPECTOR */}
-     <Inspector
-  module={selectedModule}
-  onChangeField={(fieldId, value) => {
-    if (!selectedModule) return;
+      <Inspector
+        module={selectedModule}
+        onChangeField={(field, value) =>
+          selectedModule &&
+          updateModuleValue(selectedModule.id, field, value)
+        }
+      />
 
-    updateModuleValue(selectedModule.id, fieldId, value);
-  }}
-/>
-
-      {/* EXPORT MODAL */}
       {exportOpen && (
         <ExportModal
           html={exportHtml}
           onClose={() => setExportOpen(false)}
-          onPreview={() => setPreviewOpen(true)} // ⭐ WIRE PREVIEW
+          onPreview={() => setPreviewOpen(true)}
         />
       )}
 
-      {/* PREVIEW MODAL */}
       {previewOpen && (
         <PreviewEmailModal
           html={exportHtml}
@@ -76,9 +71,8 @@ export default function App() {
         />
       )}
 
-      {/* EXPORT BUTTON */}
       <button
-        className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow"
+        className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded"
         onClick={buildExportHtml}
       >
         Export HTML

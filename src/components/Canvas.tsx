@@ -9,6 +9,7 @@ interface CanvasProps {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onRemove: (id: string) => void;
+  onDuplicate: (id: string) => void;
 
   // TOP-LEVEL: ONLY table_wrapper
   onAddTopLevel: (key: string, index?: number) => void;
@@ -32,6 +33,7 @@ export const Canvas: FC<CanvasProps> = ({
   selectedId,
   onSelect,
   onRemove,
+  onDuplicate,
   onAddTopLevel,
   onAddNested,
   onReorderTopLevel,
@@ -41,6 +43,8 @@ export const Canvas: FC<CanvasProps> = ({
     e.preventDefault();
     e.stopPropagation();
   };
+
+  const stop = (e: any) => e.stopPropagation();
 
   // -----------------------
   // TOP-LEVEL DROP (TABLE WRAPPER ONLY)
@@ -54,10 +58,7 @@ export const Canvas: FC<CanvasProps> = ({
     const data = JSON.parse(raw);
 
     if (data.type === "library-module") {
-      if (data.key !== "table_wrapper") {
-        // Only table_wrapper can be top-level
-        return;
-      }
+      if (data.key !== "table_wrapper") return;
       onAddTopLevel("table_wrapper", index);
       return;
     }
@@ -92,17 +93,14 @@ export const Canvas: FC<CanvasProps> = ({
     };
 
     if (data.type === "library-module") {
-      if (data.key === "table_wrapper") {
-        // no tables inside tables
-        return;
-      }
-      onAddNested(data.key!, wrapperId, null);
+      if (!data.key || data.key === "table_wrapper") return; // no tables inside tables
+      onAddNested(data.key, wrapperId, null);
       return;
     }
 
     if (data.type === "nested-module") {
-      if (data.key === "table_wrapper") return;
-      onReorderNested(data.id!, wrapperId, null, index);
+      if (!data.id) return;
+      onReorderNested(data.id, wrapperId, null, index);
       return;
     }
   };
@@ -130,14 +128,14 @@ export const Canvas: FC<CanvasProps> = ({
     };
 
     if (data.type === "library-module") {
-      if (data.key === "table_wrapper") return;
-      onAddNested(data.key!, acsId, country);
+      if (!data.key || data.key === "table_wrapper") return;
+      onAddNested(data.key, acsId, country);
       return;
     }
 
     if (data.type === "nested-module") {
-      if (data.key === "table_wrapper") return;
-      onReorderNested(data.id!, acsId, country, index);
+      if (!data.id) return;
+      onReorderNested(data.id, acsId, country, index);
       return;
     }
   };
@@ -160,7 +158,7 @@ export const Canvas: FC<CanvasProps> = ({
           onDragOver={allow}
           onDrop={(e) => handleAcsDrop(e, acsId, country, 0)}
         >
-          Drop here to insert at top
+          Drop here
         </div>
 
         {children.map((child, idx) => {
@@ -177,14 +175,14 @@ export const Canvas: FC<CanvasProps> = ({
                     JSON.stringify({
                       type: "nested-module",
                       id: child.id,
+                      key: child.key,
                       parentId: child.parentId!,
                       country: child.country ?? null,
-                      key: child.key,
                     })
                   );
                 }}
                 onClick={(e) => {
-                  e.stopPropagation();
+                  stop(e);
                   onSelect(child.id);
                 }}
                 className={`border rounded bg-white px-2 py-1 text-xs cursor-pointer ${
@@ -193,27 +191,38 @@ export const Canvas: FC<CanvasProps> = ({
                     : "border-slate-300 hover:border-blue-400"
                 }`}
               >
-                {def?.label ?? child.key}
-                <button
-                  className="float-right text-red-500 text-[10px]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(child.id);
-                  }}
-                >
-                  Remove
-                </button>
+                <div className="flex justify-between items-center">
+                  <span>{def?.label ?? child.key}</span>
+                  <div className="flex gap-2">
+                    <button
+                      className="text-slate-500 text-[10px]"
+                      onClick={(e) => {
+                        stop(e);
+                        onDuplicate(child.id);
+                      }}
+                    >
+                      Duplicate
+                    </button>
+                    <button
+                      className="text-red-500 text-[10px]"
+                      onClick={(e) => {
+                        stop(e);
+                        onRemove(child.id);
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Drop zone below */}
               <div
                 className="h-5 border border-dashed border-slate-300 text-[10px] flex items-center justify-center"
                 onDragOver={allow}
-                onDrop={(e) =>
-                  handleAcsDrop(e, acsId, country, idx + 1)
-                }
+                onDrop={(e) => handleAcsDrop(e, acsId, country, idx + 1)}
               >
-                Drop here to insert below
+                Drop below
               </div>
             </div>
           );
@@ -223,10 +232,86 @@ export const Canvas: FC<CanvasProps> = ({
   };
 
   // -----------------------
+  // RENDER ACS MODULE (special layout)
+  // -----------------------
+  const renderAcsModule = (acs: PlacedModule, wrapperId: string, idx: number) => {
+    return (
+      <div key={acs.id}>
+        <div
+          draggable
+          onDragStart={(e) => {
+            e.stopPropagation();
+            e.dataTransfer.setData(
+              "application/json",
+              JSON.stringify({
+                type: "nested-module",
+                id: acs.id,
+                key: acs.key,
+                parentId: wrapperId,
+                country: null,
+              })
+            );
+          }}
+          onClick={(e) => {
+            stop(e);
+            onSelect(acs.id);
+          }}
+          className={`border rounded bg-slate-50 p-3 cursor-pointer ${
+            selectedId === acs.id
+              ? "border-blue-500"
+              : "border-slate-300 hover:border-blue-400"
+          }`}
+        >
+          <div className="flex justify-between mb-2 items-center">
+            <span className="font-semibold text-xs">AMPscript Country Switcher</span>
+
+            <div className="flex gap-2">
+              <button
+                className="text-slate-500 text-[10px]"
+                onClick={(e) => {
+                  stop(e);
+                  onDuplicate(acs.id);
+                }}
+              >
+                Duplicate
+              </button>
+              <button
+                className="text-red-500 text-[10px]"
+                onClick={(e) => {
+                  stop(e);
+                  onRemove(acs.id);
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {COUNTRIES.map((c) => renderAcsBucket(acs.id, c))}
+          </div>
+        </div>
+
+        {/* Drop below ACS block */}
+        <div
+          className="h-5 border border-dashed border-slate-300 text-[10px] flex items-center justify-center mt-1"
+          onDragOver={allow}
+          onDrop={(e) => handleWrapperDrop(e, wrapperId, idx + 1)}
+        >
+          Drop below
+        </div>
+      </div>
+    );
+  };
+
+  // -----------------------
   // RENDER CONTENT INSIDE TABLE WRAPPER
   // -----------------------
   const renderWrapperBucket = (wrapperId: string) => {
-    const children = modules.filter((m) => m.parentId === wrapperId);
+    // Only wrapper-level children (country is undefined/null)
+    const children = modules.filter(
+      (m) => m.parentId === wrapperId && (m.country === undefined || m.country === null)
+    );
 
     return (
       <div className="space-y-2">
@@ -236,7 +321,7 @@ export const Canvas: FC<CanvasProps> = ({
           onDragOver={allow}
           onDrop={(e) => handleWrapperDrop(e, wrapperId, 0)}
         >
-          Drop here to insert at top
+          Drop here
         </div>
 
         {children.length === 0 && (
@@ -246,75 +331,13 @@ export const Canvas: FC<CanvasProps> = ({
         )}
 
         {children.map((child, idx) => {
-          const def = MODULES_BY_KEY[child.key];
-          const isACS = child.key === "ampscript_country";
-
-          if (isACS) {
-            // ACS block inside wrapper
-            return (
-              <div key={child.id}>
-                <div
-                  draggable
-                  onDragStart={(e) => {
-                    e.stopPropagation();
-                    e.dataTransfer.setData(
-                      "application/json",
-                      JSON.stringify({
-                        type: "nested-module",
-                        id: child.id,
-                        parentId: wrapperId,
-                        country: null,
-                        key: child.key,
-                      })
-                    );
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelect(child.id);
-                  }}
-                  className={`border rounded bg-slate-50 p-3 cursor-pointer ${
-                    selectedId === child.id
-                      ? "border-blue-500"
-                      : "border-slate-300 hover:border-blue-400"
-                  }`}
-                >
-                  <div className="flex justify-between mb-2 items-center">
-                    <span className="font-semibold text-xs">
-                      AMPscript Country Switcher
-                    </span>
-                    <button
-                      className="text-red-500 text-[10px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemove(child.id);
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {COUNTRIES.map((c) =>
-                      renderAcsBucket(child.id, c)
-                    )}
-                  </div>
-                </div>
-
-                {/* Drop below ACS block */}
-                <div
-                  className="h-5 border border-dashed border-slate-300 text-[10px] flex items-center justify-center mt-1"
-                  onDragOver={allow}
-                  onDrop={(e) =>
-                    handleWrapperDrop(e, wrapperId, idx + 1)
-                  }
-                >
-                  Drop here to insert below
-                </div>
-              </div>
-            );
+          // ✅ IMPORTANT: keep ACS as special renderer
+          if (child.key === "ampscript_country") {
+            return renderAcsModule(child, wrapperId, idx);
           }
 
-          // Normal child module inside wrapper
+          const def = MODULES_BY_KEY[child.key];
+
           return (
             <div key={child.id}>
               <div
@@ -326,14 +349,14 @@ export const Canvas: FC<CanvasProps> = ({
                     JSON.stringify({
                       type: "nested-module",
                       id: child.id,
+                      key: child.key,
                       parentId: wrapperId,
                       country: null,
-                      key: child.key,
                     })
                   );
                 }}
                 onClick={(e) => {
-                  e.stopPropagation();
+                  stop(e);
                   onSelect(child.id);
                 }}
                 className={`border rounded bg-white px-2 py-2 text-xs cursor-pointer ${
@@ -344,15 +367,27 @@ export const Canvas: FC<CanvasProps> = ({
               >
                 <div className="flex justify-between items-center">
                   <span>{def?.label ?? child.key}</span>
-                  <button
-                    className="text-red-500 text-[10px]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemove(child.id);
-                    }}
-                  >
-                    Remove
-                  </button>
+
+                  <div className="flex gap-2">
+                    <button
+                      className="text-slate-500 text-[10px]"
+                      onClick={(e) => {
+                        stop(e);
+                        onDuplicate(child.id);
+                      }}
+                    >
+                      Duplicate
+                    </button>
+                    <button
+                      className="text-red-500 text-[10px]"
+                      onClick={(e) => {
+                        stop(e);
+                        onRemove(child.id);
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -360,11 +395,9 @@ export const Canvas: FC<CanvasProps> = ({
               <div
                 className="h-5 border border-dashed border-slate-300 text-[10px] flex items-center justify-center"
                 onDragOver={allow}
-                onDrop={(e) =>
-                  handleWrapperDrop(e, wrapperId, idx + 1)
-                }
+                onDrop={(e) => handleWrapperDrop(e, wrapperId, idx + 1)}
               >
-                Drop here to insert below
+                Drop below
               </div>
             </div>
           );
@@ -398,8 +431,8 @@ export const Canvas: FC<CanvasProps> = ({
 
         {topLevel.length === 0 ? (
           <div className="text-xs text-slate-500 text-center py-10 border border-dashed border-slate-300 rounded bg-white">
-            Begin by dragging <strong>Table Wrapper Module</strong> into this canvas. All content modules must live
-            inside a table.
+            Begin by dragging <strong>Table Wrapper Module</strong> to canvas.
+            All content modules must live inside a table.
           </div>
         ) : (
           <div className="space-y-3">
@@ -420,10 +453,7 @@ export const Canvas: FC<CanvasProps> = ({
                         })
                       )
                     }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect(mod.id);
-                    }}
+                    onClick={() => onSelect(mod.id)}
                     className={`border rounded bg-white p-4 cursor-pointer ${
                       selectedId === mod.id
                         ? "border-blue-500"
@@ -434,15 +464,27 @@ export const Canvas: FC<CanvasProps> = ({
                       <span className="font-semibold text-xs">
                         {def?.label ?? "Table Wrapper"}
                       </span>
-                      <button
-                        className="text-red-500 text-[10px]"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemove(mod.id);
-                        }}
-                      >
-                        Remove
-                      </button>
+
+                      <div className="flex gap-2">
+                        <button
+                          className="text-slate-500 text-[10px]"
+                          onClick={(e) => {
+                            stop(e);
+                            onDuplicate(mod.id);
+                          }}
+                        >
+                          Duplicate
+                        </button>
+                        <button
+                          className="text-red-500 text-[10px]"
+                          onClick={(e) => {
+                            stop(e);
+                            onRemove(mod.id);
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
 
                     {/* Content bucket inside wrapper */}
