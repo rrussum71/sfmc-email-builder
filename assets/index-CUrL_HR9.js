@@ -118,98 +118,6 @@ Error generating stack: `+i.message+`
 </td>
 </tr>
   <!-- END 1x2 Image Column -->
-`},{key:"image_grid_1x3",label:"3-Col Image",fields:[{id:"image_1",label:"Image 1",type:"text"},{id:"title_1",label:"Title 1",type:"text"},{id:"alias_1",label:"Alias 1",type:"text"},{id:"link_1",label:"Link 1",type:"text"},{id:"alt_1",label:"Alt 1",type:"text"},{id:"image_2",label:"Image 2",type:"text"},{id:"title_2",label:"Title 2",type:"text"},{id:"alias_2",label:"Alias 2",type:"text"},{id:"link_2",label:"Link 2",type:"text"},{id:"alt_2",label:"Alt 2",type:"text"},{id:"image_3",label:"Image 3",type:"text"},{id:"title_3",label:"Title 3",type:"text"},{id:"alias_3",label:"Alias 3",type:"text"},{id:"link_3",label:"Link 3",type:"text"},{id:"alt_3",label:"Alt 3",type:"text"}],renderHtml:e=>`
-<!-- START 1x3 Image Column -->
-<tr>
-  <td align="center" valign="top" style="font-size:0; padding:0px; border-collapse:collapse;text-align:center;">
-    <style>
-      @media only screen and (max-width: 600px) {
-        .image-grid-1x3-col {
-          display: block !important;
-          width: 100% !important;
-          max-width: 100% !important;
-        }
-        .image-grid-1x3-img {
-          width: 100% !important;
-          max-width: 100% !important;
-        }
-      }
-    </style>
-    <!--[if (gte mso 9)|(IE)]>
-    <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
-      <tr>
-        <td align="center" valign="top" width="600">
-    <![endif]-->
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
-      <tr>
-        <td align="center" valign="top" style="font-size:0; padding:0;">
-          <!--[if (gte mso 9)|(IE)]>
-          <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
-            <tr>
-              <td align="left" valign="top" width="200">
-          <![endif]-->
-          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
-            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
-              <tr>
-                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
-                  <a href="${e.link_1||""}" alias="${e.alias_1||""}" title="${e.title_1||""}">
-                    <img src="${Be(e.image_1)}"
-                         alt="${e.alt_1||""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </div>
-          <!--[if (gte mso 9)|(IE)]>
-              </td>
-              <td width="10" style="font-size:1px;">&nbsp;</td>
-              <td align="center" valign="top" width="200">
-          <![endif]-->
-          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
-            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
-              <tr>
-                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
-                  <a href="${e.link_2||""}" alias="${e.alias_2||""}" title="${e.title_2||""}">
-                    <img src="${Be(e.image_2)}"
-                         alt="${e.alt_2||""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </div>
-          <!--[if (gte mso 9)|(IE)]>
-              </td>
-              <td width="10" style="font-size:1px;">&nbsp;</td>
-              <td align="center" valign="top" width="200">
-          <![endif]-->
-          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
-            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
-              <tr>
-                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
-                  <a href="${e.link_3||""}" alias="${e.alias_3||""}" title="${e.title_3||""}">
-                    <img src="${Be(e.image_3)}"
-                         alt="${e.alt_3||""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </div>
-          <!--[if (gte mso 9)|(IE)]>
-              </td>
-            </tr>
-          </table>
-          <![endif]-->
-        </td>
-      </tr>
-    </table>
-    <!--[if (gte mso 9)|(IE)]>
-        </td>
-      </tr>
-    </table>
-    <![endif]-->
-  </td>
-</tr>
-<!-- END 1x3 Image Column -->
 `},{key:"image_grid_1x2_cta",label:"2-Col Image + CTA",fields:[{id:"image1_src",label:"Left Image Filename or URL",type:"text"},{id:"image1_title",label:"Left Image Title",type:"text"},{id:"image1_alias",label:"Left Link Alias",type:"text"},{id:"image1_link",label:"Left Link URL",type:"text"},{id:"image1_alt",label:"Left Alt Text",type:"text"},{id:"image1_btn_title",label:"Left Button Title",type:"text"},{id:"image1_btn_alias",label:"Left Button Alias",type:"text"},{id:"image1_btn_link",label:"Left Button URL",type:"text"},{id:"image2_src",label:"Right Image Filename or URL",type:"text"},{id:"image2_title",label:"Right Image Title",type:"text"},{id:"image2_alias",label:"Right Link Alias",type:"text"},{id:"image2_link",label:"Right Link URL",type:"text"},{id:"image2_alt",label:"Right Alt Text",type:"text"},{id:"image2_btn_title",label:"Right Button Title",type:"text"},{id:"image2_btn_alias",label:"Right Button Alias",type:"text"},{id:"image2_btn_link",label:"Right Button URL",type:"text"}],renderHtml:e=>`
 <!-- START 1 of 2 Image  with Buttons Grid -->
 <tr>
@@ -323,6 +231,98 @@ Error generating stack: `+i.message+`
   </td>
 </tr>
 <!-- END 1x2 Image  with Buttons  Grid -->
+`},{key:"image_grid_1x3",label:"3-Col Image",fields:[{id:"image_1",label:"Image 1",type:"text"},{id:"title_1",label:"Title 1",type:"text"},{id:"alias_1",label:"Alias 1",type:"text"},{id:"link_1",label:"Link 1",type:"text"},{id:"alt_1",label:"Alt 1",type:"text"},{id:"image_2",label:"Image 2",type:"text"},{id:"title_2",label:"Title 2",type:"text"},{id:"alias_2",label:"Alias 2",type:"text"},{id:"link_2",label:"Link 2",type:"text"},{id:"alt_2",label:"Alt 2",type:"text"},{id:"image_3",label:"Image 3",type:"text"},{id:"title_3",label:"Title 3",type:"text"},{id:"alias_3",label:"Alias 3",type:"text"},{id:"link_3",label:"Link 3",type:"text"},{id:"alt_3",label:"Alt 3",type:"text"}],renderHtml:e=>`
+<!-- START 1x3 Image Column -->
+<tr>
+  <td align="center" valign="top" style="font-size:0; padding:0px; border-collapse:collapse;text-align:center;">
+    <style>
+      @media only screen and (max-width: 600px) {
+        .image-grid-1x3-col {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .image-grid-1x3-img {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+      }
+    </style>
+    <!--[if (gte mso 9)|(IE)]>
+    <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+      <tr>
+        <td align="center" valign="top" width="600">
+    <![endif]-->
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+      <tr>
+        <td align="center" valign="top" style="font-size:0; padding:0;">
+          <!--[if (gte mso 9)|(IE)]>
+          <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+            <tr>
+              <td align="left" valign="top" width="200">
+          <![endif]-->
+          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
+            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
+              <tr>
+                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                  <a href="${e.link_1||""}" alias="${e.alias_1||""}" title="${e.title_1||""}">
+                    <img src="${Be(e.image_1)}"
+                         alt="${e.alt_1||""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <!--[if (gte mso 9)|(IE)]>
+              </td>
+              <td width="10" style="font-size:1px;">&nbsp;</td>
+              <td align="center" valign="top" width="200">
+          <![endif]-->
+          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
+            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
+              <tr>
+                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                  <a href="${e.link_2||""}" alias="${e.alias_2||""}" title="${e.title_2||""}">
+                    <img src="${Be(e.image_2)}"
+                         alt="${e.alt_2||""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <!--[if (gte mso 9)|(IE)]>
+              </td>
+              <td width="10" style="font-size:1px;">&nbsp;</td>
+              <td align="center" valign="top" width="200">
+          <![endif]-->
+          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
+            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
+              <tr>
+                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                  <a href="${e.link_3||""}" alias="${e.alias_3||""}" title="${e.title_3||""}">
+                    <img src="${Be(e.image_3)}"
+                         alt="${e.alt_3||""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <!--[if (gte mso 9)|(IE)]>
+              </td>
+            </tr>
+          </table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+    <!--[if (gte mso 9)|(IE)]>
+        </td>
+      </tr>
+    </table>
+    <![endif]-->
+  </td>
+</tr>
+<!-- END 1x3 Image Column -->
 `},{key:"cta_button",label:"CTA Button",fields:[{id:"title",label:"Button Title",type:"text"},{id:"url",label:"Button URL",type:"text"},{id:"alias",label:"Button Alias",type:"text"}],renderHtml:e=>`
 <!-- START Button -->
 <tr>
