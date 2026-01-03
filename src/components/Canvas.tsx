@@ -39,6 +39,7 @@ export const Canvas: FC<CanvasProps> = ({
   onReorderTopLevel,
   onReorderNested,
 }) => {
+
   const allow = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -128,12 +129,16 @@ export const Canvas: FC<CanvasProps> = ({
     };
 
     if (data.type === "library-module") {
+      // 🚫 Prevent ACS from being dropped into another ACS
+      if (data.key === "ampscript_country") return;
       if (!data.key || data.key === "table_wrapper") return;
       onAddNested(data.key, acsId, country);
       return;
     }
 
     if (data.type === "nested-module") {
+      // 🚫 Prevent moving ACS into another ACS
+      if (data.key === "ampscript_country") return;
       if (!data.id) return;
       onReorderNested(data.id, acsId, country, index);
       return;
@@ -336,6 +341,83 @@ export const Canvas: FC<CanvasProps> = ({
             return renderAcsModule(child, wrapperId, idx);
           }
 
+          // Special-case: image_grid_1x3 preview renderer
+          if (child.key === "image_grid_1x3") {
+            return (
+              <div key={child.id}>
+                <div
+                  draggable
+                  onDragStart={(e) => {
+                    e.stopPropagation();
+                    e.dataTransfer.setData(
+                      "application/json",
+                      JSON.stringify({
+                        type: "nested-module",
+                        id: child.id,
+                        key: child.key,
+                        parentId: wrapperId,
+                        country: null,
+                      })
+                    );
+                  }}
+                  onClick={(e) => {
+                    stop(e);
+                    onSelect(child.id);
+                  }}
+                  className={`border rounded bg-white px-2 py-2 text-xs cursor-pointer ${
+                    selectedId === child.id
+                      ? "border-blue-500"
+                      : "border-slate-300 hover:border-blue-400"
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span>3-Column Image Grid</span>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-slate-500 text-[10px]"
+                        onClick={(e) => {
+                          stop(e);
+                          onDuplicate(child.id);
+                        }}
+                      >
+                        Duplicate
+                      </button>
+                      <button
+                        className="text-red-500 text-[10px]"
+                        onClick={(e) => {
+                          stop(e);
+                          onRemove(child.id);
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                  <div className="border border-slate-200 rounded p-2 bg-slate-50">
+                    <div className="flex gap-2">
+                      {[1, 2, 3].map((n) => (
+                        <div key={n} className="flex-1 flex flex-col items-center">
+                          <div className="w-full aspect-[4/3] bg-slate-200 rounded mb-1 flex items-center justify-center">
+                            <div className="w-8 h-6 bg-slate-300 rounded" />
+                          </div>
+                          <span className="text-[11px] text-slate-500">Image {n}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {/* Drop zone below */}
+                <div
+                  className="h-5 border border-dashed border-slate-300 text-[10px] flex items-center justify-center"
+                  onDragOver={allow}
+                  onDrop={(e) => handleWrapperDrop(e, wrapperId, idx + 1)}
+                >
+                  Drop below
+                </div>
+              </div>
+            );
+          }
+
           const def = MODULES_BY_KEY[child.key];
 
           return (
@@ -431,8 +513,8 @@ export const Canvas: FC<CanvasProps> = ({
 
         {topLevel.length === 0 ? (
           <div className="text-xs text-slate-500 text-center py-10 border border-dashed border-slate-300 rounded bg-white">
-            Begin by dragging <strong>Table Wrapper Module</strong> to canvas.
-            All content modules must live inside a table.
+            Drag <strong>Table Module</strong> to canvas.<br/>
+            All content modules must live inside a Table Module.
           </div>
         ) : (
           <div className="space-y-3">

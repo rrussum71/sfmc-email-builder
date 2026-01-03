@@ -13,6 +13,9 @@ const IMAGE_FIELDS = new Set([
   "image_right",
   "image1_src",
   "image2_src",
+  "image_1",
+  "image_2",
+  "image_3",
 ]);
 
 function getTitleFieldForAlias(
@@ -35,12 +38,27 @@ function getTitleFieldForAlias(
       if (aliasId === "image2_btn_alias") return "image2_btn_title";
       return null;
 
+    case "image_grid_1x3":
+      if (aliasId === "alias_1") return "title_1";
+      if (aliasId === "alias_2") return "title_2";
+      if (aliasId === "alias_3") return "title_3";
+      return null;
+
     case "cta_button":
       return aliasId === "alias" ? "title" : null;
 
     default:
       return null;
   }
+}
+
+// Normalization helper for alias values (used elsewhere in this file for other modules)
+function normalizeAliasValue(title: string) {
+  // Lowercase, trim, replace spaces with underscores, remove non-alphanumeric except underscore, append _alias
+  let normalized = title.trim().toLowerCase();
+  normalized = normalized.replace(/\s+/g, "_");
+  normalized = normalized.replace(/[^a-z0-9_]/g, "");
+  return normalized ? `${normalized}_alias` : "";
 }
 
 const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
@@ -50,14 +68,27 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
   function handleFieldChange(fieldId: string, value: string) {
     onChangeField(fieldId, value);
 
-    if (module?.key !== "image_grid_1x2_cta") return;
-
-    if (fieldId === "image1_link") {
-      onChangeField("image1_btn_link", value);
+    // Logic for image_grid_1x2_cta
+    if (module?.key === "image_grid_1x2_cta") {
+      if (fieldId === "image1_link") {
+        onChangeField("image1_btn_link", value);
+      }
+      if (fieldId === "image2_link") {
+        onChangeField("image2_btn_link", value);
+      }
     }
 
-    if (fieldId === "image2_link") {
-      onChangeField("image2_btn_link", value);
+    // Logic for image_grid_1x3 to auto-populate alias fields when title fields change
+    if (module?.key === "image_grid_1x3") {
+      if (fieldId === "title_1") {
+        onChangeField("alias_1", normalizeAliasValue(value));
+      }
+      if (fieldId === "title_2") {
+        onChangeField("alias_2", normalizeAliasValue(value));
+      }
+      if (fieldId === "title_3") {
+        onChangeField("alias_3", normalizeAliasValue(value));
+      }
     }
   }
 

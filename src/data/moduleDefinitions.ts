@@ -110,22 +110,22 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
      3) 2 COL IMAGE
   ============================================================ */
   {
-  key: "image_grid_1x2",
-  label: "2-Col Image",
-  fields: [
-    { id: "image_left", label: "Left Image Filename or URL", type: "text" },
-    { id: "title_left", label: "Left Image Title", type: "text" },
-    { id: "alias_left", label: "Left Link Alias", type: "text" },
-    { id: "link_left", label: "Left Link URL", type: "text" },
-    { id: "alt_left", label: "Left Alt Text", type: "text" },
+    key: "image_grid_1x2",
+    label: "2-Col Image",
+    fields: [
+      { id: "image_left", label: "Left Image Filename or URL", type: "text" },
+      { id: "title_left", label: "Left Image Title", type: "text" },
+      { id: "alias_left", label: "Left Link Alias", type: "text" },
+      { id: "link_left", label: "Left Link URL", type: "text" },
+      { id: "alt_left", label: "Left Alt Text", type: "text" },
 
-    { id: "image_right", label: "Right Image Filename or URL", type: "text" },
-    { id: "title_right", label: "Right Image Title", type: "text" },
-    { id: "alias_right", label: "Right Link Alias", type: "text" },
-    { id: "link_right", label: "Right Link URL", type: "text" },
-    { id: "alt_right", label: "Right Alt Text", type: "text" },
-  ],
-  renderHtml: (v) => `
+      { id: "image_right", label: "Right Image Filename or URL", type: "text" },
+      { id: "title_right", label: "Right Image Title", type: "text" },
+      { id: "alias_right", label: "Right Link Alias", type: "text" },
+      { id: "link_right", label: "Right Link URL", type: "text" },
+      { id: "alt_right", label: "Right Alt Text", type: "text" },
+    ],
+    renderHtml: (v) => `
 <!-- START 1x2 Image Column -->
 <tr>
   <td align="center" valign="top" style="font-size:0; padding: 0px; border-collapse: collapse;text-align:center">
@@ -187,7 +187,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 </tr>
   <!-- END 1x2 Image Column -->
 `,
-},
+  },
 
   /* ============================================================
      4) 2 COL IMAGE + CTA
@@ -333,7 +333,123 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 `,
 },
 
-
+// ============================================================
+  // 3) 3 COL IMAGE (NEW MODULE)
+  // ============================================================
+  {
+    key: "image_grid_1x3",
+    label: "3-Col Image",
+    fields: [
+      { id: "image_1", label: "Image 1", type: "text" },
+      { id: "title_1", label: "Title 1", type: "text" },
+      { id: "alias_1", label: "Alias 1", type: "text" },
+      { id: "link_1", label: "Link 1", type: "text" },
+      { id: "alt_1", label: "Alt 1", type: "text" },
+      { id: "image_2", label: "Image 2", type: "text" },
+      { id: "title_2", label: "Title 2", type: "text" },
+      { id: "alias_2", label: "Alias 2", type: "text" },
+      { id: "link_2", label: "Link 2", type: "text" },
+      { id: "alt_2", label: "Alt 2", type: "text" },
+      { id: "image_3", label: "Image 3", type: "text" },
+      { id: "title_3", label: "Title 3", type: "text" },
+      { id: "alias_3", label: "Alias 3", type: "text" },
+      { id: "link_3", label: "Link 3", type: "text" },
+      { id: "alt_3", label: "Alt 3", type: "text" },
+    ],
+    renderHtml: (v) => `
+<!-- START 1x3 Image Column -->
+<tr>
+  <td align="center" valign="top" style="font-size:0; padding:0px; border-collapse:collapse;text-align:center;">
+    <style>
+      @media only screen and (max-width: 600px) {
+        .image-grid-1x3-col {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .image-grid-1x3-img {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+      }
+    </style>
+    <!--[if (gte mso 9)|(IE)]>
+    <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+      <tr>
+        <td align="center" valign="top" width="600">
+    <![endif]-->
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
+      <tr>
+        <td align="center" valign="top" style="font-size:0; padding:0;">
+          <!--[if (gte mso 9)|(IE)]>
+          <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+            <tr>
+              <td align="left" valign="top" width="200">
+          <![endif]-->
+          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
+            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
+              <tr>
+                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                  <a href="${v.link_1 || ""}" alias="${v.alias_1 || ""}" title="${v.title_1 || ""}">
+                    <img src="${resolveSfmcImageUrl(v.image_1)}"
+                         alt="${v.alt_1 || ""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <!--[if (gte mso 9)|(IE)]>
+              </td>
+              <td width="10" style="font-size:1px;">&nbsp;</td>
+              <td align="center" valign="top" width="200">
+          <![endif]-->
+          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
+            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
+              <tr>
+                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                  <a href="${v.link_2 || ""}" alias="${v.alias_2 || ""}" title="${v.title_2 || ""}">
+                    <img src="${resolveSfmcImageUrl(v.image_2)}"
+                         alt="${v.alt_2 || ""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <!--[if (gte mso 9)|(IE)]>
+              </td>
+              <td width="10" style="font-size:1px;">&nbsp;</td>
+              <td align="center" valign="top" width="200">
+          <![endif]-->
+          <div style="display:inline-block; max-width:33.333%; min-width:180px; vertical-align:top; width:100%;" class="image-grid-1x3-col">
+            <table class="image-grid-1x3-col" align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:200px;" class="max-width">
+              <tr>
+                <td align="center" valign="top" style="font-family: Arial; padding-top:0px;">
+                  <a href="${v.link_3 || ""}" alias="${v.alias_3 || ""}" title="${v.title_3 || ""}">
+                    <img src="${resolveSfmcImageUrl(v.image_3)}"
+                         alt="${v.alt_3 || ""}" width="200" border="0" style="display: block; border: 0px; font-family: Arial; font-size: 18px;" class="image-grid-1x3-img"/>
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <!--[if (gte mso 9)|(IE)]>
+              </td>
+            </tr>
+          </table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+    <!--[if (gte mso 9)|(IE)]>
+        </td>
+      </tr>
+    </table>
+    <![endif]-->
+  </td>
+</tr>
+<!-- END 1x3 Image Column -->
+`,
+  },
 
   /* ============================================================
      5) CTA BUTTON

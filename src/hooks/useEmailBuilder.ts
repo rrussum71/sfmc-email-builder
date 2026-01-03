@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { PlacedModule, Country } from "../types/Module";
 import { MODULE_DEFINITIONS } from "../data/moduleDefinitions";
 
-const COUNTRY_ORDER: Country[] = ["US", "CA", "AU", "Default"];
 
 let idCounter = 1;
 const nextId = () => `mod_${idCounter++}`;
@@ -254,54 +253,109 @@ export function useEmailBuilder() {
   }
 
   function buildExportHtml() {
-    const lines: string[] = [];
+  const lines: string[] = [];
 
-    modules
-      .filter((m) => !m.parentId && m.key === "table_wrapper")
-      .forEach((wrapper) => {
-        lines.push(`<table width="100%" cellpadding="0" cellspacing="0">`);
+  modules
+    .filter((m) => !m.parentId && m.key === "table_wrapper")
+    .forEach((wrapper) => {
+      lines.push(`<table role="presentation" 
+       width="100%" 
+       border="0" 
+       cellpadding="0" 
+       cellspacing="0" 
+       style="border-collapse: collapse; 
+              border: none;">`);
 
-        modules
-          .filter((m) => m.parentId === wrapper.id)
-          .forEach((mod) => {
-            const def = defByKey[mod.key];
-            if (!def) return;
+      modules
+        .filter((m) => m.parentId === wrapper.id)
+        .forEach((mod) => {
+          const def = defByKey[mod.key];
+          if (!def) return;
 
-            if (mod.key === "ampscript_country") {
-              let first = true;
+          // ----------------------------------
+          // AMPscript Country Switcher
+          // ----------------------------------
+          if (mod.key === "ampscript_country") {
+            const childrenByCountry: Record<Country, typeof modules> = {
+  US: [],
+  CA: [],
+  AU: [],
+  Default: [],
+};
 
-              COUNTRY_ORDER.forEach((c) => {
-                const kids = modules.filter(
-                  (m) => m.parentId === mod.id && m.country === c
-                );
-                if (!kids.length) return;
+           modules
+  .filter((m) => m.parentId === mod.id && m.country)
+  .forEach((child) => {
+    const country = child.country as Country;
+    childrenByCountry[country].push(child);
+  });
 
-                if (first) {
-                  lines.push(`%%[ IF @Country == "${c}" THEN ]%%`);
-                  first = false;
-                } else {
-                  lines.push(`%%[ ELSEIF @Country == "${c}" THEN ]%%`);
-                }
+            const hasUS = childrenByCountry.US.length > 0;
+            const hasCA = childrenByCountry.CA.length > 0;
+            const hasAU = childrenByCountry.AU.length > 0;
+            const hasDefault = childrenByCountry.Default.length > 0;
 
-                kids.forEach((k) =>
-                  lines.push(defByKey[k.key]?.renderHtml(k.values))
-                );
-              });
+            let first = true;
 
-              lines.push(`%%[ ENDIF ]%%`);
-              return;
+            if (hasUS) {
+              lines.push(`%%[ IF @Country == "US" THEN ]%%`);
+              childrenByCountry.US.forEach((c) =>
+                lines.push(defByKey[c.key]?.renderHtml(c.values))
+              );
+              first = false;
             }
 
-            lines.push(def.renderHtml(mod.values));
-          });
+            if (hasCA) {
+              lines.push(
+                first
+                  ? `%%[ IF @Country == "CA" THEN ]%%`
+                  : `%%[ ELSEIF @Country == "CA" THEN ]%%`
+              );
+              childrenByCountry.CA.forEach((c) =>
+                lines.push(defByKey[c.key]?.renderHtml(c.values))
+              );
+              first = false;
+            }
 
-        lines.push(`</table>`);
-      });
+            if (hasAU) {
+              lines.push(
+                first
+                  ? `%%[ IF @Country == "AU" THEN ]%%`
+                  : `%%[ ELSEIF @Country == "AU" THEN ]%%`
+              );
+              childrenByCountry.AU.forEach((c) =>
+                lines.push(defByKey[c.key]?.renderHtml(c.values))
+              );
+              first = false;
+            }
 
-    setExportHtml(lines.join("\n"));
-    setExportOpen(true);
-    setPreviewOpen(false);
-  }
+            // ✅ DEFAULT — ALWAYS ELSE
+            lines.push(`%%[ ELSE ]%%`);
+
+            const defaultSource = hasDefault
+              ? childrenByCountry.Default
+              : childrenByCountry.US; // fallback to US
+
+            defaultSource.forEach((c) =>
+              lines.push(defByKey[c.key]?.renderHtml(c.values))
+            );
+
+            lines.push(`%%[ ENDIF ]%%`);
+            return;
+          }
+
+          // ----------------------------------
+          // Normal module
+          // ----------------------------------
+          lines.push(def.renderHtml(mod.values));
+        });
+
+      lines.push(`</table>`);
+    });
+
+  setExportHtml(lines.join("\n"));
+  setExportOpen(true);
+}
 
   return {
     modules,
