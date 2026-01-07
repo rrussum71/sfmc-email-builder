@@ -33,7 +33,20 @@ function buildAliasFromTitle(value: string): string {
 
   return `${base}_alias`;
 }
+function normalizeHexColor(value: string, fallback: string): string {
+  const v = value.trim();
 
+  if (!v) return fallback;
+
+  // already valid hex with #
+  if (/^#[0-9A-Fa-f]{6}$/.test(v)) return v;
+
+  // user entered hex without #
+  if (/^[0-9A-Fa-f]{6}$/.test(v)) return `#${v}`;
+
+  // anything else → fallback
+  return fallback;
+}
 export function useEmailBuilder() {
   const [modules, setModules] = useState<PlacedModule[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -252,110 +265,119 @@ export function useEmailBuilder() {
     );
   }
 
+  function buildHtml(): string {
+    const lines: string[] = [];
+
+    modules
+      .filter((m) => !m.parentId && m.key === "table_wrapper")
+      .forEach((wrapper) => {
+        const bgColor = normalizeHexColor(
+  wrapper.values?.bg ?? "",
+  "#F5F4F2"
+);
+
+        lines.push(`<table role="presentation"
+       width="100%"
+       border="0"
+       cellpadding="0"
+       cellspacing="0"
+       style="border-collapse: collapse;
+              border: none;
+              background-color: ${bgColor};">`);
+
+        modules
+          .filter((m) => m.parentId === wrapper.id)
+          .forEach((mod) => {
+            const def = defByKey[mod.key];
+            if (!def) return;
+
+            if (mod.key === "ampscript_country") {
+              const childrenByCountry: Record<Country, typeof modules> = {
+                US: [],
+                CA: [],
+                AU: [],
+                Default: [],
+              };
+
+              modules
+                .filter((m) => m.parentId === mod.id && m.country)
+                .forEach((child) => {
+                  childrenByCountry[child.country as Country].push(child);
+                });
+
+              const hasUS = childrenByCountry.US.length > 0;
+              const hasCA = childrenByCountry.CA.length > 0;
+              const hasAU = childrenByCountry.AU.length > 0;
+              const hasDefault = childrenByCountry.Default.length > 0;
+
+              let first = true;
+
+              if (hasUS) {
+                lines.push(`%%[ IF @Country == "US" THEN ]%%`);
+                childrenByCountry.US.forEach((c) =>
+                  lines.push(defByKey[c.key]?.renderHtml(c.values))
+                );
+                first = false;
+              }
+
+              if (hasCA) {
+                lines.push(
+                  first
+                    ? `%%[ IF @Country == "CA" THEN ]%%`
+                    : `%%[ ELSEIF @Country == "CA" THEN ]%%`
+                );
+                childrenByCountry.CA.forEach((c) =>
+                  lines.push(defByKey[c.key]?.renderHtml(c.values))
+                );
+                first = false;
+              }
+
+              if (hasAU) {
+                lines.push(
+                  first
+                    ? `%%[ IF @Country == "AU" THEN ]%%`
+                    : `%%[ ELSEIF @Country == "AU" THEN ]%%`
+                );
+                childrenByCountry.AU.forEach((c) =>
+                  lines.push(defByKey[c.key]?.renderHtml(c.values))
+                );
+                first = false;
+              }
+
+              lines.push(`%%[ ELSE ]%%`);
+
+              const defaultSource = hasDefault
+                ? childrenByCountry.Default
+                : childrenByCountry.US;
+
+              defaultSource.forEach((c) =>
+                lines.push(defByKey[c.key]?.renderHtml(c.values))
+              );
+
+              lines.push(`%%[ ENDIF ]%%`);
+              return;
+            }
+
+            lines.push(def.renderHtml(mod.values));
+          });
+
+        lines.push(`</table>`);
+      });
+
+    return lines.join("\n");
+  }
+
   function buildExportHtml() {
-  const lines: string[] = [];
+    const html = buildHtml();
+    setExportHtml(html);
+    setExportOpen(true);
+  }
 
-  modules
-    .filter((m) => !m.parentId && m.key === "table_wrapper")
-    .forEach((wrapper) => {
-      lines.push(`<table role="presentation" 
-       width="100%" 
-       border="0" 
-       cellpadding="0" 
-       cellspacing="0" 
-       style="border-collapse: collapse; 
-              border: none;">`);
-
-      modules
-        .filter((m) => m.parentId === wrapper.id)
-        .forEach((mod) => {
-          const def = defByKey[mod.key];
-          if (!def) return;
-
-          // ----------------------------------
-          // AMPscript Country Switcher
-          // ----------------------------------
-          if (mod.key === "ampscript_country") {
-            const childrenByCountry: Record<Country, typeof modules> = {
-  US: [],
-  CA: [],
-  AU: [],
-  Default: [],
-};
-
-           modules
-  .filter((m) => m.parentId === mod.id && m.country)
-  .forEach((child) => {
-    const country = child.country as Country;
-    childrenByCountry[country].push(child);
-  });
-
-            const hasUS = childrenByCountry.US.length > 0;
-            const hasCA = childrenByCountry.CA.length > 0;
-            const hasAU = childrenByCountry.AU.length > 0;
-            const hasDefault = childrenByCountry.Default.length > 0;
-
-            let first = true;
-
-            if (hasUS) {
-              lines.push(`%%[ IF @Country == "US" THEN ]%%`);
-              childrenByCountry.US.forEach((c) =>
-                lines.push(defByKey[c.key]?.renderHtml(c.values))
-              );
-              first = false;
-            }
-
-            if (hasCA) {
-              lines.push(
-                first
-                  ? `%%[ IF @Country == "CA" THEN ]%%`
-                  : `%%[ ELSEIF @Country == "CA" THEN ]%%`
-              );
-              childrenByCountry.CA.forEach((c) =>
-                lines.push(defByKey[c.key]?.renderHtml(c.values))
-              );
-              first = false;
-            }
-
-            if (hasAU) {
-              lines.push(
-                first
-                  ? `%%[ IF @Country == "AU" THEN ]%%`
-                  : `%%[ ELSEIF @Country == "AU" THEN ]%%`
-              );
-              childrenByCountry.AU.forEach((c) =>
-                lines.push(defByKey[c.key]?.renderHtml(c.values))
-              );
-              first = false;
-            }
-
-            // ✅ DEFAULT — ALWAYS ELSE
-            lines.push(`%%[ ELSE ]%%`);
-
-            const defaultSource = hasDefault
-              ? childrenByCountry.Default
-              : childrenByCountry.US; // fallback to US
-
-            defaultSource.forEach((c) =>
-              lines.push(defByKey[c.key]?.renderHtml(c.values))
-            );
-
-            lines.push(`%%[ ENDIF ]%%`);
-            return;
-          }
-
-          // ----------------------------------
-          // Normal module
-          // ----------------------------------
-          lines.push(def.renderHtml(mod.values));
-        });
-
-      lines.push(`</table>`);
-    });
-
-  setExportHtml(lines.join("\n"));
-  setExportOpen(true);
-}
+  function buildPreviewHtml() {
+    const html = buildHtml();
+    setExportHtml(html);
+    setPreviewOpen(true);
+  }
 
   return {
     modules,
@@ -376,5 +398,6 @@ export function useEmailBuilder() {
     duplicateModule,
     updateModuleValue,
     buildExportHtml,
+    buildPreviewHtml,
   };
 }

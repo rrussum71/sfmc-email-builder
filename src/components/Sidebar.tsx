@@ -13,7 +13,7 @@ const Sidebar: FC<SidebarProps> = ({ onAdd }) => {
     (m) => m.key === TABLE_KEY
   );
   const contentModules = MODULE_DEFINITIONS.filter(
-    (m) => m.key !== TABLE_KEY
+    (m) => m.key !== TABLE_KEY && m.key !== "body_copy"
   );
 
   return (

@@ -4,7 +4,7 @@ import { MODULES_BY_KEY, resolveSfmcImageUrl } from "../data/moduleDefinitions";
 
 interface InspectorProps {
   module: PlacedModule | null;
-  onChangeField: (fieldId: string, value: string) => void;
+  onChangeField: (fieldId: string, value: any) => void;
 }
 
 const IMAGE_FIELDS = new Set([
@@ -92,6 +92,37 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
     }
   }
 
+  function getRepeaterItems(fieldId: string) {
+    return Array.isArray(module?.values[fieldId]) ? module!.values[fieldId] : [];
+  }
+
+  function updateRepeaterItem(
+    fieldId: string,
+    index: number,
+    subFieldId: string,
+    value: string
+  ) {
+    const items = [...getRepeaterItems(fieldId)];
+    items[index] = { ...items[index], [subFieldId]: value };
+    onChangeField(fieldId, items);
+  }
+
+  function addRepeaterItem(fieldId: string) {
+    const items = [...getRepeaterItems(fieldId), {}];
+    onChangeField(fieldId, items);
+  }
+
+  function duplicateRepeaterItem(fieldId: string, index: number) {
+    const items = [...getRepeaterItems(fieldId)];
+    items.splice(index + 1, 0, { ...items[index] });
+    onChangeField(fieldId, items);
+  }
+
+  function removeRepeaterItem(fieldId: string, index: number) {
+    const items = getRepeaterItems(fieldId).filter((_, i) => i !== index);
+    onChangeField(fieldId, items);
+  }
+
   return (
     <aside className="w-[420px] bg-white border-l border-slate-200 p-6 overflow-y-auto h-screen shadow-inner flex flex-col">
       <div className="sticky top-0 bg-white z-10 pb-4 border-b border-slate-200">
@@ -131,6 +162,91 @@ const Inspector: FC<InspectorProps> = ({ module, onChangeField }) => {
               }
 
               const isImageField = IMAGE_FIELDS.has(field.id);
+
+              if (field.type === "repeater") {
+                const items = getRepeaterItems(field.id);
+
+                return (
+                  <div key={field.id} className="space-y-4">
+                    <label className="block text-xs font-semibold text-slate-600">
+                      {field.label}
+                    </label>
+
+                    {items.map((item, index) => (
+                      <div
+                        key={index}
+                        className="border border-slate-200 rounded p-3 space-y-3 bg-slate-50"
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-semibold text-slate-600">
+                            {field.itemLabel} {index + 1}
+                          </span>
+                          <div className="space-x-2">
+                            <button
+                              className="text-[10px] px-2 py-0.5 border rounded"
+                              onClick={() => duplicateRepeaterItem(field.id, index)}
+                            >
+                              Duplicate
+                            </button>
+                            <button
+                              className="text-[10px] px-2 py-0.5 border rounded text-red-600"
+                              onClick={() => removeRepeaterItem(field.id, index)}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+
+                        {field.fields.map((subField) => (
+                          <div key={subField.id} className="space-y-1">
+                            <label className="block text-[11px] font-semibold text-slate-600">
+                              {subField.label}
+                            </label>
+
+                            {subField.type === "text" && (
+                              <input
+                                type="text"
+                                value={item[subField.id] ?? ""}
+                                onChange={(e) =>
+                                  updateRepeaterItem(
+                                    field.id,
+                                    index,
+                                    subField.id,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full rounded border border-slate-300 px-2 py-1 text-xs"
+                              />
+                            )}
+
+                            {subField.type === "textarea" && (
+                              <textarea
+                                value={item[subField.id] ?? ""}
+                                onChange={(e) =>
+                                  updateRepeaterItem(
+                                    field.id,
+                                    index,
+                                    subField.id,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full rounded border border-slate-300 px-2 py-1 text-xs min-h-[100px]"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+
+                    <button
+                      className="text-xs px-3 py-1 border border-dashed rounded text-slate-600"
+                      onClick={() => addRepeaterItem(field.id)}
+                    >
+                      + Add {field.itemLabel}
+                    </button>
+                  </div>
+                );
+              }
 
               return (
                 <div key={field.id} className="space-y-1">

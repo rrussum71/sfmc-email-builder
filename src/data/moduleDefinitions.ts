@@ -41,7 +41,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   ============================================================ */
   {
     key: "table_wrapper",
-    label: "Table Wrapper (Section)",
+    label: "Table Wrapper",
     fields: [
       {
         id: "bg",
@@ -87,23 +87,82 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   },
 
   /* ============================================================
-     2) BODY COPY
+     BODY COPY (REPEATER / V2)
   ============================================================ */
   {
-    key: "body_copy",
+    key: "body_copy_v2",
     label: "Body Copy",
-    fields: [{ id: "text", label: "Body Copy", type: "textarea" }],
-    renderHtml: (v) => `
-<!-- START Body Copy -->
+    fields: [
+      {
+        id: "sections",
+        label: "Body Sections",
+        type: "repeater",
+        itemLabel: "Section",
+        fields: [
+          {
+            id: "text",
+            label: "Section Text",
+            type: "textarea",
+          },
+          {
+            id: "linkText",
+            label: "Link Text",
+            type: "text",
+          },
+          {
+            id: "linkUrl",
+            label: "Link URL",
+            type: "text",
+          },
+        ],
+      },
+    ],
+    renderHtml: (v) => {
+      const sections = Array.isArray(v.sections) ? v.sections : [];
+
+      if (!sections.length) return "";
+
+      const html = sections
+        .map((section) => {
+          const text = section.text || "";
+          const linkText = section.linkText?.trim();
+          const href =
+            section.linkUrl?.trim() ||
+            "%%=RedirectTo(@PromoTermsConditionsUrl)=%%";
+
+          let output = text;
+
+          if (linkText) {
+            const brandedLink = `<a href="${href}" style="color:#00bbe6;text-decoration:none;">${linkText}</a>`;
+            const escaped = linkText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const regex = new RegExp(escaped, "g");
+
+            if (output) {
+              output = regex.test(output)
+                ? output.replace(regex, brandedLink)
+                : `${output} ${brandedLink}`;
+            } else {
+              output = brandedLink;
+            }
+          }
+
+          return `
 <tr>
-  <td style="padding:15px 40px;text-align:center;">
+  <td style="padding:0 40px 16px 40px;text-align:center;">
     <p style="font-size:18px;color:#000;margin:0;font-family:Arial;line-height:28px;text-align:center;">
-      ${v.text || ""}
+      ${output}
     </p>
   </td>
-</tr>
-<!-- END Body Copy -->
-`,
+</tr>`;
+        })
+        .join("");
+
+      return `
+<!-- START Body Copy Sections -->
+${html}
+<!-- END Body Copy Sections -->
+`;
+    },
   },
 
   /* ============================================================
@@ -483,18 +542,77 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   {
     key: "disclaimer_copy",
     label: "Disclaimer Copy",
-    fields: [{ id: "text", label: "Disclaimer Copy", type: "textarea" }],
-    renderHtml: (v) => `
+    fields: [
+      {
+        id: "disclaimers",
+        label: "Disclaimer Items",
+        type: "repeater",
+        itemLabel: "Disclaimer",
+        fields: [
+          {
+            id: "text",
+            label: "Disclaimer Text",
+            type: "textarea",
+          },
+          {
+            id: "linkText",
+            label: "Link Text",
+            type: "text",
+          },
+          {
+            id: "linkUrl",
+            label: "Link URL",
+            type: "text",
+          },
+        ],
+      },
+    ],
+    renderHtml: (v) => {
+      const items = Array.isArray(v.disclaimers) ? v.disclaimers : [];
+
+      if (!items.length) return "";
+
+      const html = items
+        .map((item) => {
+          const text = item.text || "";
+          const linkText = item.linkText?.trim();
+          const href =
+            item.linkUrl?.trim() ||
+            "%%=RedirectTo(@PromoTermsConditionsUrl)=%%";
+
+          let output = text;
+
+          if (linkText) {
+            const brandedLink = `<a href="${href}" style="color:#00bbe6;text-decoration:none;">${linkText}</a>`;
+            const escaped = linkText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const regex = new RegExp(escaped, "g");
+
+            if (output) {
+              output = regex.test(output)
+                ? output.replace(regex, brandedLink)
+                : `${output} ${brandedLink}`;
+            } else {
+              output = brandedLink;
+            }
+          }
+
+          return `
+<p style="font-size:12px;color:#000;margin:0 0 6px 0;font-family:Arial;line-height:18px;text-align:center;">
+  ${output}
+</p>`;
+        })
+        .join("");
+
+      return `
 <!-- START Disclaimer Copy -->
 <tr>
   <td style="padding:25px 40px;text-align:center;">
-    <p style="font-size:12px;color:#000;margin:0;font-family:Arial;line-height:18px;text-align:center;">
-      ${v.text || ""}
-    </p>
+    ${html}
   </td>
 </tr>
 <!-- END Disclaimer Copy -->
-`,
+`;
+    },
   },
 
   /* ============================================================
