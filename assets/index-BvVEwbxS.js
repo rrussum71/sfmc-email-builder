@@ -49,7 +49,7 @@ Error generating stack: `+i.message+`
 <!-- END ${e.image_title||""} Image Full Width -->
 `},{key:"body_copy_v2",label:"Body Copy",fields:[{id:"sections",label:"Body Sections",type:"repeater",itemLabel:"Section",fields:[{id:"text",label:"Section Text",type:"textarea"},{id:"linkText",label:"Link Text",type:"text"},{id:"linkUrl",label:"Link URL",type:"text"}]}],renderHtml:e=>{const t=Array.isArray(e.sections)?e.sections:[];return t.length?`
 <!-- START Body Copy Sections -->
-${t.map(r=>{var s,c;const l=r.text||"",i=(s=r.linkText)==null?void 0:s.trim(),o=((c=r.linkUrl)==null?void 0:c.trim())||"%%=RedirectTo(@PromoTermsConditionsUrl)=%%";let u=l;if(i){const y=`<a href="${o}" style="color:#00bbe6;text-decoration:none;">${i}</a>`,p=i.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),m=new RegExp(p,"g");u?u=m.test(u)?u.replace(m,y):`${u} ${y}`:u=y}return`
+${t.map(r=>{var s,c;const l=r.text||"",i=(s=r.linkText)==null?void 0:s.trim(),o=((c=r.linkUrl)==null?void 0:c.trim())||"%%=RedirectTo(@PromoTermsConditionsUrl)=%%";let u=l;if(i){const y=`<a href="${o}" style="color:#00bbe6;text-decoration:none;">${i}</a>`,p=i.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),m=new RegExp(`\\b${p}\\b`,"g");u?u=m.test(u)?u.replace(m,y):`${u} ${y}`:u=y}return`
 <tr>
   <td style="padding:0 40px 16px 40px;text-align:center;">
     <p style="font-size:18px;color:#000;margin:0;font-family:Arial;line-height:28px;text-align:center;">
@@ -338,7 +338,7 @@ ${t.map(r=>{var s,c;const l=r.text||"",i=(s=r.linkText)==null?void 0:s.trim(),o=
 <!-- START Disclaimer Copy -->
 <tr>
   <td style="padding:25px 40px;text-align:center;">
-    ${t.map(r=>{var s,c;const l=r.text||"",i=(s=r.linkText)==null?void 0:s.trim(),o=((c=r.linkUrl)==null?void 0:c.trim())||"%%=RedirectTo(@PromoTermsConditionsUrl)=%%";let u=l;if(i){const y=`<a href="${o}" style="color:#00bbe6;text-decoration:none;">${i}</a>`,p=i.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),m=new RegExp(p,"g");u?u=m.test(u)?u.replace(m,y):`${u} ${y}`:u=y}return`
+    ${t.map(r=>{var s,c;const l=r.text||"",i=(s=r.linkText)==null?void 0:s.trim(),o=((c=r.linkUrl)==null?void 0:c.trim())||"%%=RedirectTo(@PromoTermsConditionsUrl)=%%";let u=l;if(i){const y=`<a href="${o}" style="color:#00bbe6;text-decoration:none;">${i}</a>`,p=i.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),m=new RegExp(`\\b${p}\\b`,"g");u?u=m.test(u)?u.replace(m,y):`${u} ${y}`:u=y}return`
 <p style="font-size:12px;color:#000;margin:0 0 6px 0;font-family:Arial;line-height:18px;text-align:center;">
   ${u}
 </p>`}).join("")}
